@@ -80,6 +80,7 @@ export default {
   cursor: pointer;
   margin-left: 10px;
   margin-right: 10px;
+  transition: 0.2s
 }
 
 .hero-text button:hover {

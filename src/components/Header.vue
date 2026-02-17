@@ -1,21 +1,40 @@
-<script>
-export default {
-  name: "Header",
-  data() {
-    return {
-      showLogin: false
-    }
-  },
-  methods: {
-    toggleLogin() {
-      this.showLogin = !this.showLogin
-    }
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const showLogin = ref(false)
+const isVisible = ref(true) // header visibility
+let lastScrollY = window.scrollY
+
+function toggleLogin() {
+  showLogin.value = !showLogin.value
+}
+
+function handleScroll() {
+  const currentScroll = window.scrollY
+  if (currentScroll > lastScrollY && currentScroll > 30) {
+    // scrolling down -> hide header
+    isVisible.value = false
+  } else {
+    // scrolling up -> show header
+    isVisible.value = true
   }
-};
+  lastScrollY = currentScroll
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
-  <header class="nav-container">
+  <header
+    class="nav-container"
+    :class="{ hidden: !isVisible }"
+  >
 
     <!-- LEFT -->
     <div class="logo-container">
@@ -26,7 +45,7 @@ export default {
 
     <!-- CENTER -->
     <div class="menu-container">
-      <button>Home</button>
+      <button><router-link class="link" to="/home">Home</router-link></button>
       <button>Brands</button>
       <button>Contact Us</button>
     </div>
@@ -56,7 +75,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
 /* MAIN NAVBAR */
 .nav-container {
     position: fixed;
@@ -73,6 +92,12 @@ export default {
     color: white;
     z-index: 1000;
     cursor: context-menu;
+    transition: top 0.3s ease; /* Added for smooth hide/show */
+}
+
+/* Hides header */
+.nav-container.hidden {
+  top: -80px; /* moves header out of view */
 }
 
 /* LEFT */
@@ -89,7 +114,7 @@ export default {
 .menu-container {
     display: flex;
     gap: 5px;
-    margin-right: 95px;
+    margin-right: 180px;
 }
 
 .menu-container button {
@@ -101,6 +126,7 @@ export default {
     color: #040404;
     font-size: 16px;
     cursor: pointer;
+    transition: 0.2s
 }
 
 .menu-container button:hover {
@@ -135,6 +161,7 @@ export default {
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
+    transition: 0.2s
 }
 
 .login-btn:hover,

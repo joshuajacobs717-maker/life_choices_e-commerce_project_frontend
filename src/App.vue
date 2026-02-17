@@ -1,8 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue"
 import Header from './components/Header.vue'
-import Hero from './components/Hero.vue'
-import ShopBy from './components/CategoryDiv.vue'
 
 const scrollProgress = ref(0)
 
@@ -24,7 +22,6 @@ onUnmounted(() => {
 <template>
   <div class="app">
 
-    <!-- Scroll Progress Bar -->
     <div class="scroll-bar">
       <div 
         class="scroll-progress" 
@@ -33,8 +30,8 @@ onUnmounted(() => {
     </div>
 
     <Header/>
-    <Hero/>
-    <ShopBy/>
+    <router-view />
+    
   </div>
 </template>
 
@@ -51,6 +48,11 @@ body {
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
+}
+
+.link {
+  text-decoration: none;
+  color: inherit; /* or set a specific color, e.g., #000 */
 }
 
 /* Scroll Bar Container */

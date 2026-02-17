@@ -1,0 +1,153 @@
+<script setup>
+import { ref } from "vue";
+import Cards from "@/components/CatergoryCards.vue";
+
+// Track the currently active category
+const activeCategory = ref("All");
+
+// List of categories
+const categories = ["All", "Equipment", "Appliances", "Clothing"];
+
+// Function to select a category
+function selectCategory(category) {
+  activeCategory.value = category;
+}
+</script>
+
+<template>
+  <div class="category-page">
+    <!-- Title -->
+    <div class="title">
+      <h1>Products</h1>
+      <p>Pick Which Category Below</p>
+    </div>
+
+    <!-- Buttons + Search -->
+    <div class="actions">
+      <div class="category-btn-div">
+        <button
+          v-for="category in categories"
+          :key="category"
+          :class="{ active: activeCategory === category }"
+          @click="selectCategory(category)"
+        >
+          {{ category }}
+        </button>
+      </div>
+
+      <div class="search">
+        <form action="/search_results.html" method="get">
+          <div class="search-wrapper">
+            <input
+              type="search"
+              id="site-search"
+              placeholder="Search products..."
+            />
+            <button type="submit" class="search-btn">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="card-container">
+      <Cards :category="activeCategory" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.category-page {
+  padding: 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 100px;
+}
+
+/* Title */
+.title h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+.title p {
+  margin: 4px 0 0 0;
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Buttons + Search */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 50px;
+}
+
+/* Category Buttons */
+.category-btn-div {
+  display: flex;
+  gap: 5px;
+}
+
+.category-btn-div button {
+  padding: 5px 15px;
+  border-radius: 8px;
+  border: none;
+  background-color: #e7e7e7;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.category-btn-div button:hover {
+  background-color: #040404;
+  color: #e7e7e7;
+}
+
+/* Highlight active button */
+.category-btn-div button.active {
+  background-color: #040404;
+  color: #e7e7e7;
+  font-weight: bold;
+}
+
+/* Search */
+.search-wrapper {
+  position: relative;
+  width: 250px; /* adjust width if needed */
+}
+
+.search-wrapper input {
+  width: 100%;
+  padding: 8px 40px 8px 12px; /* padding-right for button space */
+  border-radius: 25px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.search-wrapper .search-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background-color: #040404;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.search-wrapper .search-btn:hover {
+  background-color: #333;
+}
+
+/* Cards */
+.card-container {
+  margin-top: 20px;
+}
+</style>
