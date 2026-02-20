@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue"
 import Header from './components/Header.vue'
+import Footer from './components/Footer.vue'
 
 const scrollProgress = ref(0)
 
@@ -29,8 +30,9 @@ onUnmounted(() => {
       ></div>
     </div>
 
-    <Header/>
+    <Header v-if="!$route.meta.hideLayout"/>
     <router-view />
+    <Footer v-if="!$route.meta.hideLayout"/>
     
   </div>
 </template>

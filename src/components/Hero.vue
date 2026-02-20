@@ -1,7 +1,7 @@
 <script>
 export default {
-  name: "Hero"
-}
+  name: "Hero",
+};
 </script>
 
 <template>
@@ -10,10 +10,11 @@ export default {
     <div class="hero-text">
       <h1>See it. Want it. Get it.</h1>
       <p>The thrill is in the click.</p>
-    <div class="options-btn">
-        <button>Our Story</button>
-        <button>Challenges</button>
-    </div>
+      <div class="options-btn">
+        <router-link class="btn-link" to="/ourstory"> Our Story </router-link>
+
+        <router-link class="btn-link" to="/challenges">Challenges</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -45,8 +46,12 @@ export default {
 
 /* Wave animation */
 @keyframes waveMove {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* Center the hero text */
@@ -80,10 +85,28 @@ export default {
   cursor: pointer;
   margin-left: 10px;
   margin-right: 10px;
-  transition: 0.2s
+  transition: 0.2s;
 }
 
 .hero-text button:hover {
+  background-color: #e7e7e7;
+  color: #040404;
+}
+
+.btn-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #040404;
+  color: #e7e7e7;
+  font-size: 1rem;
+  border-radius: 5px;
+  text-decoration: none;
+  margin-left: 10px;
+  margin-right: 10px;
+  transition: 0.2s;
+}
+
+.btn-link:hover {
   background-color: #e7e7e7;
   color: #040404;
 }

@@ -1,12 +1,16 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-const showLogin = ref(false)
 const isVisible = ref(true) // header visibility
+const router = useRouter()
 let lastScrollY = window.scrollY
 
-function toggleLogin() {
-  showLogin.value = !showLogin.value
+function goToAuth(mode) {
+  router.push({
+    path: '/auth',
+    query: { mode },
+  })
 }
 
 function handleScroll() {
@@ -47,7 +51,7 @@ onUnmounted(() => {
     <div class="menu-container">
       <button><router-link class="link" to="/home">Home</router-link></button>
       <button>Brands</button>
-      <button>Contact Us</button>
+      <button><router-link class="link" to="/contact">Contact Us</router-link></button>
     </div>
 
     <!-- RIGHT -->
@@ -57,22 +61,12 @@ onUnmounted(() => {
       </div>
 
       <div class="login-options">
-        <button class="login-btn" @click="toggleLogin">Login</button>
-        <button class="signup-btn">Sign Up</button>
+        <button class="login-btn" @click="goToAuth('login')">Login</button>
+        <button class="signup-btn" @click="goToAuth('register')">Sign Up</button>
       </div>
     </div>
 
   </header>
-
-  <!-- LOGIN MODAL -->
-  <div v-if="showLogin" class="modal-overlay" @click.self="toggleLogin">
-    <div class="login-card">
-      <h2>Login</h2>
-      <input type="email" placeholder="Email" />
-      <input type="password" placeholder="Password" />
-      <button class="submit-btn">Login</button>
-    </div>
-  </div>
 </template>
 
 <style scoped>
@@ -88,7 +82,7 @@ onUnmounted(() => {
     justify-content: space-between;
     padding-left: 10px;
     padding-right: 10px;
-    background-color: transparent; 
+    background-color: transparent;
     color: white;
     z-index: 1000;
     cursor: context-menu;
@@ -118,7 +112,7 @@ onUnmounted(() => {
 }
 
 .menu-container button {
-    background-color: #e7e7e7;
+    background-color: #E7E7E7;
     border: none;
     border-radius: 10px;
     padding: 3px;
@@ -130,7 +124,7 @@ onUnmounted(() => {
 }
 
 .menu-container button:hover {
-    color: #e7e7e7;
+    color: #E7E7E7;
     background-color: #040404;
 }
 
@@ -157,7 +151,7 @@ onUnmounted(() => {
 .signup-btn {
     background: #040404;
     border: none;
-    color: #e7e7e7;
+    color: #E7E7E7;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
@@ -166,52 +160,7 @@ onUnmounted(() => {
 
 .login-btn:hover,
 .signup-btn:hover {
-    background-color: #e7e7e7;
+    background-color: #E7E7E7;
     color: #040404;
-}
-
-/* MODAL OVERLAY */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: #00000080;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-
-/* LOGIN CARD */
-.login-card {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  width: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.modal h2 {
-  text-align: center;
-}
-
-.modal input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.submit-btn {
-  padding: 10px;
-  border: none;
-  background-color: #040404;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.submit-btn:hover {
-  background-color: #333;
 }
 </style>
