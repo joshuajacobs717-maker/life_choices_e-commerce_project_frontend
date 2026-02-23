@@ -5,6 +5,7 @@ import Auth from '@/views/Auth.vue'
 import Contact from '@/views/Contact.vue'
 import OurStory from '@/views/OurStory.vue'
 import Challenges from '@/views/Challenges.vue'
+import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,8 +17,43 @@ const router = createRouter({
   {
     path: '/home',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: {layout: "default"}
   },
+  {
+    path: '/auth',
+    name: 'Auth',
+    component: Auth,
+    meta: { layout: "auth" }
+  },
+  {
+    path: "/admin",
+    component: AdminDashboard,
+    meta: {
+      layout: "admin",
+      requiresAuth: true,
+      role: "Admin"
+    }
+    // children: [
+    // {
+    //   path: "products",
+    //   component: AdminProducts
+    // },
+    // {
+    //   path: "categories",
+    //   component: AdminCategories
+    // },
+    // {
+    //   path: "orders",
+    //   component: AdminOrders
+    // },
+    // {
+    //   path: "businesses",
+    //   component: AdminBusinesses
+    // }
+    // ]
+
+  },  
   {
     path: '/products',
     name: 'Products',
@@ -33,12 +69,12 @@ const router = createRouter({
     name: 'OurStory',
     component: OurStory
   },
-  {
-    path: '/auth',
-    name: 'Auth',
-    component: Auth,
-    meta: { hideLayout: true }
-  },
+  // {
+  //   path: '/auth',
+  //   name: 'Auth',
+  //   component: Auth,
+  //   meta: { hideLayout: true }
+  // },
   {
     path: '/login',
     redirect: '/auth?mode=login',

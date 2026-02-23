@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
+import { useStore } from "vuex"
+const store = useStore()
 const route = useRoute();
 const router = useRouter();
 
@@ -32,8 +33,23 @@ function setMode(mode) {
 }
 
 // Email login/register handlers
-function submitLogin() {
-  console.log("Email login:", loginForm.value);
+async function submitLogin() {
+  try {
+    const user = await store.dispatch("login", {
+      email: loginForm.value.email,
+      password: loginForm.value.password
+    })
+
+    // Redirect based on role
+    if (user.role === "Admin") {
+      router.push("/admin")
+    } else {
+      router.push("/home")
+    }
+
+  } catch (error) {
+    alert(error)
+  }
 }
 
 function submitRegister() {
