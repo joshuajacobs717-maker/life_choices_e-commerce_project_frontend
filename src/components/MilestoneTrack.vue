@@ -67,7 +67,7 @@ export default {
 
 <template>
   <div class="loyalty-container">
-    <h2>Purchase Milestone Map</h2>
+    <h2>Your Purchase Milestone Map</h2>
     <p class="purchase-count">
       Purchases made: <strong>{{ purchaseCount }}</strong>
     </p>

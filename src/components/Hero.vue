@@ -8,7 +8,7 @@ export default {
   <div class="hero-image">
     <div class="wave-background"></div>
     <div class="hero-text">
-      <h1>See it. Want it. Get it.</h1>
+      <h1>Want it?, Buy it., Get</h1>
       <p>The thrill is in the click.</p>
       <div class="options-btn">
         <router-link class="btn-link" to="/ourstory"> Our Story </router-link>
