@@ -19,7 +19,6 @@ export default{
         accumsan pharetra pretium. Pellentesque posuere magna vitae rhoncus
         lobortis. Donec sit amet elit at orci feugiat pellentesque nec nec orci.
       </p>
-      <button>Read More <i class="fa-solid fa-angle-right"></i></button>
     </div>
 
     <!-- Right: Image -->
@@ -56,24 +55,6 @@ export default{
   line-height: 1.6;
   color: #555;
   margin-bottom: 20px;
-}
-
-.about-story button {
-  padding: 8px 16px;
-  background-color: transparent;
-  color: #040404;
-  border: 1px solid #040404;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 1rem;
-}
-
-.about-story button:hover {
-  background-color: #333;
-  color: #f5f5f5;
 }
 
 /* About Image (right) */
