@@ -53,7 +53,7 @@ const router = createRouter({
     // }
     // ]
 
-  },  
+  }, 
   {
     path: '/products',
     name: 'Products',
