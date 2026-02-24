@@ -42,18 +42,13 @@ onUnmounted(() => {
 <template>
   <!-- HERO -->
   <div class="hero">
-    <img
-      class="hero-background"
-      src="https://i.postimg.cc/Cx15yBcp/eyes-black.gif"
-      alt="Hero Background"
-    />
     <div class="hero-text">
       <h1>Keep Your Eye On The Prize</h1>
       <p>Win a trip, Get a discount, Win a coupon</p>
     </div>
   </div>
 
-  <!-- COUNTDOWN -->
+  <!-- COUNTDOWN (Liquid Glass) -->
   <div class="countdown">
     <h4>Next contest in: {{ countdown }}</h4>
   </div>
@@ -99,6 +94,7 @@ onUnmounted(() => {
 </template>
 
 <style>
+
 /* HERO */
 .hero {
   position: relative;
@@ -107,33 +103,73 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.hero-background {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .hero-text {
   position: absolute;
-  color: white;
+  color: #000000;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
 }
 
-/* COUNTDOWN */
+/* ============================= */
+/* COUNTDOWN - LIQUID GLASS */
+/* ============================= */
+
 .countdown {
+  position: relative;
+  margin: 2rem auto;
+  padding: 20px 32px;
+  width: fit-content;
+
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
   text-align: center;
-  margin: 2rem 0;
   font-weight: bold;
+
+  overflow: hidden;
+}
+
+/* Subtle glass highlight */
+.countdown::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0.05)
+  );
+
+  opacity: 0.6;
+}
+
+.countdown h4 {
+  position: relative;
+  margin: 0;
+  font-size: 1.3rem;
+  color: #111;
+  letter-spacing: 0.5px;
 }
 
 /* HOW TO */
 .how-to {
   position: relative;
   padding: 3rem 2rem 2rem;
-  background: #f5f5f5;
+  background: #c8c8c8;
+  border-radius: 8px;
 }
 
 .how-to h2 {
@@ -171,7 +207,6 @@ onUnmounted(() => {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.2);
-  color: #24e5ff;
 }
 
 .card i {
@@ -184,7 +219,10 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-top: 10px;
   justify-content: space-between;
+  background-color: #c8c8c8;
+  border-radius: 8px;
 }
 
 .prizes-con h3 {
@@ -203,27 +241,12 @@ onUnmounted(() => {
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
+  background-color: #eeebeb;
 }
 
-/* GOLD */
-.prize-one:hover {
-  background: linear-gradient(135deg, #fdd81b, #ffb347, #d4af37);
+.prize:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
-}
-
-/* SILVER */
-.prize-two:hover {
-  background: linear-gradient(135deg, #f0f0f0, #9d9d9d, #8f8f8f);
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 0 25px rgba(192, 192, 192, 0.6);
-}
-
-/* BRONZE */
-.prize-three:hover {
-  background: linear-gradient(135deg, #e28426, #b87333, #773a01);
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 0 25px rgba(205, 127, 50, 0.6);
+  box-shadow: 0 0 25px #b6b6b699;
 }
 
 /* RESPONSIVE */
@@ -238,4 +261,5 @@ onUnmounted(() => {
     flex: 1 1 100%;
   }
 }
+
 </style>
