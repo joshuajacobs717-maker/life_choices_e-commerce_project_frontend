@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useStore } from "vuex"
-const store = useStore()
+import { useStore } from "vuex";
+
+const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
@@ -16,6 +17,7 @@ const loginForm = ref({
 
 const registerForm = ref({
   name: "",
+  surname: "",
   email: "",
   password: "",
   confirmPassword: "",
@@ -37,23 +39,30 @@ async function submitLogin() {
   try {
     const user = await store.dispatch("login", {
       email: loginForm.value.email,
-      password: loginForm.value.password
-    })
+      password: loginForm.value.password,
+    });
 
     // Redirect based on role
     if (user.role === "Admin") {
-      router.push("/admin")
+      router.push("/admin");
     } else {
-      router.push("/home")
+      router.push("/home");
     }
-
   } catch (error) {
-    alert(error)
+    alert(error);
   }
 }
 
 function submitRegister() {
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    alert("Passwords do not match");
+    return;
+  }
+
   console.log("Email register:", registerForm.value);
+
+  // Example (if you have a Vuex action later):
+  // store.dispatch("register", { ...registerForm.value })
 }
 
 // ------------------- Google Login -------------------
@@ -86,12 +95,15 @@ watch(
   (mode) => {
     activeMode.value = mode === "register" ? "register" : "login";
   },
-  { immediate: true },
+  { immediate: true }
 );
 </script>
 
 <template>
   <main class="auth-page">
+    <div class="back-to-home">
+    <router-link class="btn-link" to="/home" ><button>Back</button></router-link>
+    </div>
     <div class="wave-background" aria-hidden="true"></div>
     <section class="auth-card">
       <h1>{{ isLoginMode ? "Welcome back !" : "Create an account" }}</h1>
@@ -153,12 +165,23 @@ watch(
       </form>
 
       <!-- Register Form -->
+       
       <form v-else class="auth-form" @submit.prevent="submitRegister">
         <div class="field">
           <label for="register-name">Name</label>
           <input
             id="register-name"
             v-model="registerForm.name"
+            type="text"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="register-surname">Surname</label>
+          <input
+            id="register-surname"
+            v-model="registerForm.surname"
             type="text"
             required
           />
@@ -233,6 +256,27 @@ watch(
   background: #ffffff;
   overflow: hidden;
 }
+.btn-link button{
+  position: fixed;      /* stays in top-left even when scrolling */
+  top: 20px;
+  left: 20px;
+  z-index: 1000;        /* above background effects */
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  background-color: #171717;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+}
+
+.btn-link button:hover {
+  background-color: #949393;
+}
+
 .wave-background {
   position: absolute;
   inset: 0;

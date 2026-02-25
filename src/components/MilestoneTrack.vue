@@ -1,5 +1,5 @@
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 
 export default {
   name: "MilestoneMap",
@@ -13,178 +13,278 @@ export default {
       { purchases: 30, reward: "50% Discount" },
     ];
 
-    const nextMilestone = computed(() =>
-      milestones.find((m) => purchaseCount.value < m.purchases)
+    const reversedMilestones = computed(() => [...milestones].reverse());
+
+    const maxPurchases = milestones[milestones.length - 1].purchases;
+
+    const progressPercent = computed(() =>
+      Math.min((purchaseCount.value / maxPurchases) * 100, 100)
     );
 
-    const progressPercent = computed(() => {
-      if (!nextMilestone.value) return 100;
-      const prev =
-        milestones
-          .slice()
-          .reverse()
-          .find((m) => purchaseCount.value >= m.purchases) || { purchases: 0 };
-      const range = nextMilestone.value.purchases - prev.purchases;
-      const progress = purchaseCount.value - prev.purchases;
-      return (progress / range) * 100;
-    });
-
-    // Reset after passing the last milestone
     const addPurchase = () => {
-      if (purchaseCount.value >= milestones[milestones.length - 1].purchases) {
-        purchaseCount.value = 0; // reset
-      } else {
-        purchaseCount.value++;
-      }
+      if (purchaseCount.value >= maxPurchases) purchaseCount.value = 0;
+      else purchaseCount.value++;
     };
-
-    const pathRef = ref(null);
-    const milestonePositions = ref([]);
-
-    onMounted(() => {
-      if (!pathRef.value) return;
-      const pathLength = pathRef.value.getTotalLength();
-      milestonePositions.value = milestones.map((_, i) => {
-        const point = pathRef.value.getPointAtLength(
-          (i / (milestones.length - 1)) * pathLength
-        );
-        return { x: point.x, y: point.y };
-      });
-    });
 
     return {
       purchaseCount,
-      milestones,
+      reversedMilestones,
       progressPercent,
       addPurchase,
-      pathRef,
-      milestonePositions,
     };
   },
 };
 </script>
 
-
 <template>
   <div class="loyalty-container">
-    <h2>Your Purchase Milestone Map</h2>
-    <p class="purchase-count">
-      Purchases made: <strong>{{ purchaseCount }}</strong>
-    </p>
+    <div class="top">
+      <div>
+        <h2>Your Purchase Milestone Track</h2>
+        <p class="purchase-count">
+          Purchases made: <strong>{{ purchaseCount }}</strong>
+        </p>
+      </div>
 
-    <div class="map-wrapper">
-      <svg viewBox="0 0 1000 600" class="map-svg">
-        <!-- Curvy path -->
+      <button class="purchase-btn" @click="addPurchase">
+        Simulate Purchase
+      </button>
+    </div>
+
+    <!-- Walking Path -->
+    <div class="path-wrap" :style="{ '--p': progressPercent }">
+      <svg class="trail" viewBox="0 0 320 900" preserveAspectRatio="none" aria-hidden="true">
         <path
-          ref="pathRef"
-          d="M100,100 C300,50 700,150 900,100 C700,250 300,350 500,500 C700,650 300,550 900,580"
-          stroke="#ddd"
-          stroke-width="8"
-          fill="none"
+          class="trail-base"
+          d="M160 880
+             C 70 820, 70 730, 160 660
+             C 250 590, 250 500, 160 430
+             C 70 360, 70 270, 160 200
+             C 250 130, 250 70, 160 40"
         />
-        <!-- Progress stroke -->
         <path
-          d="M100,100 C300,50 700,150 900,100 C700,250 300,350 500,500 C700,650 300,550 900,580"
-          stroke="#77e4ff"
-          stroke-width="8"
-          fill="none"
-          stroke-linecap="round"
-          :stroke-dasharray="2000"
-          :stroke-dashoffset="2000 - 2000*(progressPercent/100)"
-          style="transition: stroke-dashoffset 0.6s ease"
-        />
-        <!-- Milestone circles -->
-        <circle
-          v-for="(m, index) in milestones"
-          :key="index"
-          :cx="milestonePositions[index]?.x"
-          :cy="milestonePositions[index]?.y"
-          r="15"
-          :class="{ unlocked: purchaseCount >= m.purchases }"
+          class="trail-progress"
+          d="M160 880
+             C 70 820, 70 730, 160 660
+             C 250 590, 250 500, 160 430
+             C 70 360, 70 270, 160 200
+             C 250 130, 250 70, 160 40"
         />
       </svg>
 
-      <!-- Labels -->
-      <div class="milestone-labels">
+      <!-- milestones (descending order) -->
+      <div class="milestones">
         <div
-          v-for="(m, index) in milestones"
-          :key="'label-'+index"
-          :style="{ top: milestonePositions[index]?.y - 10 + 'px', left: milestonePositions[index]?.x + 25 + 'px' }"
-          class="milestone-info"
+          v-for="(m, index) in reversedMilestones"
+          :key="m.purchases"
+          class="milestone"
+          :class="[
+            index % 2 === 0 ? 'left' : 'right',
+            { unlocked: purchaseCount >= m.purchases }
+          ]"
         >
-          <p>{{ m.purchases }} Purchases</p>
-          <p>{{ m.reward }}</p>
+          <!-- label lights up when unlocked -->
+          <div class="bubble">
+            <p class="m-title">{{ m.purchases }} Purchases</p>
+            <p class="m-reward">{{ m.reward }}</p>
+          </div>
+
+          <!-- dot lights up when unlocked -->
+          <div class="dot"></div>
         </div>
       </div>
     </div>
-
-    <button class="purchase-btn" @click="addPurchase">
-      Simulate Purchase
-    </button>
   </div>
 </template>
 
-<style>
+<style scoped>
 .loyalty-container {
-  max-width: 100%;
-  padding: 30px;
-  background: #f5f5f5;
+  width: 100%;
+  background: #c8c8c8;
   border-radius: 16px;
-  text-align: center;
+  padding: 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  margin-top: 50px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .purchase-count {
-  margin-bottom: 30px;
+  margin: 6px 0 0;
   color: #555;
 }
 
-.map-wrapper {
-  position: relative;
-  width: 100%;
-  height: 600px;
-}
-
-.map-svg {
-  width: 100%;
-  height: 100%;
-}
-
-circle {
-  fill: #ddd;
-  transition: all 0.3s ease;
-}
-
-circle.unlocked {
-  fill: #234fff;
-  /* transform: scale(1.3); */
-  box-shadow: 0 0 10px #77e4ff80;
-}
-
-.milestone-labels {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
-
-.milestone-info {
-  position: absolute;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
 .purchase-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
+  padding: 10px 18px;
   border-radius: 999px;
   border: none;
   background: #111;
   color: white;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition: 0.25s ease;
 }
-
 .purchase-btn:hover {
   background: #333;
+}
+
+.path-wrap {
+  position: relative;
+  min-height: 560px;
+  padding: 10px 0;
+  --p: 0;
+}
+
+.trail {
+  position: absolute;
+  inset: 0;
+  width: 320px;
+  height: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.trail-base {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.16);
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trail-progress {
+  fill: none;
+  stroke: #234fff;
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1400;
+  stroke-dashoffset: calc(1400 - (1400 * (var(--p) / 100)));
+  transition: stroke-dashoffset 0.45s ease;
+}
+
+.milestones {
+  position: relative;
+  height: 100%;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.milestone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+}
+
+.milestone.left {
+  justify-content: flex-start;
+  padding-right: 55%;
+}
+.milestone.right {
+  justify-content: flex-end;
+  padding-left: 55%;
+}
+
+/* Bubble (default) */
+.bubble {
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  max-width: 260px;
+  border: 2px solid transparent;
+  transition: 0.25s ease;
+}
+
+.m-title {
+  margin: 0;
+  font-weight: 800;
+  color: #111;
+  transition: 0.25s ease;
+}
+.m-reward {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+  transition: 0.25s ease;
+}
+
+/* ✅ Label lights up when milestone reached */
+.milestone.unlocked .bubble {
+  background: rgba(35, 79, 255, 0.12);
+  border-color: rgba(35, 79, 255, 0.45);
+  box-shadow: 0 0 0 6px rgba(35, 79, 255, 0.12), 0 14px 28px rgba(35, 79, 255, 0.18);
+}
+
+.milestone.unlocked .m-title {
+  color: #234fff;
+}
+
+.milestone.unlocked .m-reward {
+  color: #234fff;
+  opacity: 0.9;
+}
+
+/* Dot */
+.dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e6e6e6;
+  border: 4px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+  transition: 0.25s ease;
+}
+
+/* follow curve */
+.milestone.left .dot {
+  transform: translateX(calc(-50% - 26px));
+}
+.milestone.right .dot {
+  transform: translateX(calc(-50% + 26px));
+}
+
+/* ✅ Dot lights up when milestone reached */
+.milestone.unlocked .dot {
+  background: #234fff;
+  box-shadow: 0 0 0 6px rgba(35, 79, 255, 0.18), 0 12px 26px rgba(35, 79, 255, 0.25);
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .trail {
+    width: 260px;
+  }
+
+  .milestone.left,
+  .milestone.right {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+  }
+
+  .milestone.left .dot,
+  .milestone.right .dot {
+    transform: translateX(-50%);
+  }
+
+  .bubble {
+    max-width: 220px;
+    text-align: center;
+  }
 }
 </style>

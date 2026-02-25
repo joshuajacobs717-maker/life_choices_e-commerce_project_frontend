@@ -8,7 +8,9 @@ export default{
 <div class="items">
     <img src="https://via.placeholder.com/250x180" alt="Equipment">
     <h4>placeholder</h4>
-    <p>placeholder text</p>
+    <p>description</p>
+    <p>price</p>
+    <button>Add to Cart</button>
 </div>
 </template>
 
@@ -29,5 +31,16 @@ export default{
 
 .items:hover {
   transform: translateY(-5px);
+}
+
+button {
+  background-color: #292929;
+  color: #ebebeb;
+  border: none;
+  border-radius: 8px;
+}
+
+button:hover {
+  background-color: #5e5d5d;
 }
 </style>
