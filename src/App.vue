@@ -9,7 +9,11 @@ import CustomerLayout from "@/layouts/CustomerLayout.vue"
 const route = useRoute()
 
 const layoutComponent = computed(() => {
-  const layout = route.meta.layout || "default"
+  const matchedLayouts = route.matched
+    .map(record => record.meta.layout)
+    .filter(Boolean)
+
+  const layout = matchedLayouts[matchedLayouts.length - 1] || "default"
 
   if (layout === "auth") return AuthLayout
   if (layout === "admin") return AdminLayout
