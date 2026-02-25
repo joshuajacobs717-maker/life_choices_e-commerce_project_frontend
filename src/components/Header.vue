@@ -57,15 +57,9 @@ onUnmounted(() => {
 
     <!-- CENTER -->
     <div class="menu-container">
-      <button>
-        <router-link class="link" to="/home">Home</router-link>
-      </button>
-      <button>
-        <router-link class="link" to="/companies">Companies</router-link>
-      </button>
-      <button>
-        <router-link class="link" to="/contact">Contact Us</router-link>
-      </button>
+      <button><router-link class="link" to="/home">Home</router-link></button>
+      <button><router-link to="/businesses">Businesses</router-link></button>
+      <button><router-link class="link" to="/contact">Contact Us</router-link></button>
     </div>
 
     <!-- RIGHT -->
