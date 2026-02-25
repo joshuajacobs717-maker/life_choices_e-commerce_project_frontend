@@ -8,7 +8,7 @@ import Challenges from '@/views/Challenges.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import CategoriesView from '@/views/CategoriesView.vue'
 import OrdersView from '@/views/OrdersView.vue'
-import BusinessesView from '@/views/BusinessesView.vue'
+import Companies from '@/views/Companies.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,7 +19,7 @@ const router = createRouter({
   },
   {
       path: "/businesses",
-      component: BusinessesView,
+      component: Companies,
       meta: {layout: "default"}
   },
   {
@@ -57,7 +57,7 @@ const router = createRouter({
     },
     {
       path: "businesses",
-      component: BusinessesView
+      component: Companies
     }
     ]
 
