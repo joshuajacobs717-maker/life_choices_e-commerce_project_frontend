@@ -418,7 +418,7 @@ resetState();
         </div>
 
         <div class="note" v-if="status === 'won'">
-          Discount unlocked. You can read it from localStorage key:
+          Discount unlocked.
           <code>snake_discount_unlocked</code>
         </div>
       </div>
