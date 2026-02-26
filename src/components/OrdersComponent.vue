@@ -1,58 +1,42 @@
 <template>
   <div class="container-fluid ps-4 pe-3 pt-4">
-    <h2 class="mb-4 fw-semibold">Orders Management</h2>
+    <h2 class="mb-4 fw-semibold">Orders</h2>
 
-    <!-- Section Navigation Buttons -->
-    <div class="d-flex gap-3 mb-4">
+    <!-- Navigation Buttons -->
+    <div class="mb-4">
       <button
-        class="btn btn-primary"
-        :class="{ active: activeSection === 'processing' }"
+        class="btn btn-dark me-2 rounded-pill px-4"
+        @click="activeSection = 'unhandled'"
+      >
+        Unhandled Orders
+      </button>
+      <button
+        class="btn btn-outline-dark me-2 rounded-pill px-4"
         @click="activeSection = 'processing'"
       >
         Processing Orders
       </button>
       <button
-        class="btn btn-secondary"
-        :class="{ active: activeSection === 'history' }"
+        class="btn btn-outline-dark rounded-pill px-4"
         @click="activeSection = 'history'"
       >
         Order History
       </button>
-      <button
-        v-if="activeSection !== ''"
-        class="btn btn-outline-dark"
-        @click="activeSection = ''"
-      >
-        Show All Unhandled Orders
-      </button>
     </div>
 
-    <!-- Default: show unhandled orders -->
-    <div v-if="activeSection === ''">
-      <h4 class="mb-3">Unhandled / Pending Orders</h4>
-      <ProcessingOrders
-        :orders="orders.filter(o => o.status.toLowerCase() === 'pending' || o.status.toLowerCase() === 'unhandled')"
-      />
-    </div>
-
-    <!-- Render Selected Sections -->
-    <ProcessingOrders
-      v-if="activeSection === 'processing'"
-      :orders="orders.filter(
-        o => o.status.toLowerCase() !== 'pending' &&
-             o.status.toLowerCase() !== 'unhandled' &&
-             new Date(o.date) >= today
-      )"
-    />
-    <OrderHistory
-      v-if="activeSection === 'history'"
-      :orders="orders.filter(o => new Date(o.date) < today)"
+    <!-- Dynamic Section -->
+    <component
+      :is="currentComponent"
+      :orders="orders"
+      :activeSection="activeSection"
+      @update:activeSection="activeSection = $event"
+      :key="activeSection"
     />
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script>
+import UnhandledOrders from './UnhandledOrders.vue'
 import ProcessingOrders from './ProcessingOrders.vue'
 import OrderHistory from './OrderHistory.vue'
 
@@ -64,52 +48,61 @@ const createItems = (names, prices, quantities) =>
     price: prices[i] ?? 10,
   }))
 
-// Central orders array
-const orders = ref([
-  // Active / processing
-  {
-    id: 'ORD10001',
-    userDetails: 'Alice Johnson, alice@example.com',
-    date: new Date().toISOString().slice(0, 10), // today
-    status: 'Processing',
-    items: createItems(
-      ['Laptop', 'Mouse', 'Keyboard'],
-      [1200, 25, 45],
-      [1, 1, 1]
-    ),
-  },
-  // Historical
-  {
-    id: 'ORD10002',
-    userDetails: 'Bob Smith, bob@example.com',
-    date: '2026-01-28', // older than today
-    status: 'Delivered',
-    items: createItems(
-      ['Smartphone', 'Charger', 'Case'],
-      [800, 20, 15],
-      [1, 1, 2]
-    ),
-  },
-  // Unhandled / pending
-  {
-    id: 'ORD10003',
-    userDetails: 'Charlie Davis, charlie@example.com',
-    date: '2026-03-05', // future / pending
-    status: 'Pending',
-    items: createItems(
-      ['Monitor', 'HDMI Cable'],
-      [300, 10],
-      [1, 2]
-    ),
-  },
-])
+export default {
+  name: 'OrdersComponent',
+  components: { UnhandledOrders, ProcessingOrders, OrderHistory },
 
-const activeSection = ref('') // default: show unhandled orders
-const today = new Date()
-</script>
+  data() {
+    return {
+      activeSection: 'unhandled',
 
-<style>
-button.active {
-  opacity: 0.85;
+      orders: [
+        {
+          id: 'ORD10001',
+          customer: 'John Smith',
+          total: 2500,
+          status: 'pending', // unhandled
+          createdAt: new Date('2026-01-20'),
+          items: createItems(
+            ['Laptop','Mouse','Keyboard','USB Drive','Headphones','Charger','Webcam'],
+            [1200,150,200,50,300,100,200],
+            [1,2,1,1,1,1,1]
+          ),
+        },
+        {
+          id: 'ORD10002',
+          customer: 'Sarah Williams',
+          total: 1800,
+          status: 'relayed', // processing
+          createdAt: new Date('2026-02-20'),
+          items: createItems(
+            ['Sneakers','Socks','T-Shirt','Cap','Jacket','Shorts','Backpack'],
+            [500,50,200,150,800,250,400],
+            [1,3,2,1,1,2,1]
+          ),
+        },
+        {
+          id: 'ORD10003',
+          customer: 'Michael Brown',
+          total: 3200,
+          status: 'cancelled', // history
+          createdAt: new Date('2026-02-24'),
+          items: createItems(
+            ['Smartphone','Earbuds','Power Bank','Case','Screen Protector','Charger','SD Card'],
+            [2000,300,400,150,100,100,150],
+            [1,2,1,1,2,1,1]
+          ),
+        },
+      ],
+    }
+  },
+
+  computed: {
+    currentComponent() {
+      if (this.activeSection === 'unhandled') return UnhandledOrders
+      if (this.activeSection === 'processing') return ProcessingOrders
+      if (this.activeSection === 'history') return OrderHistory
+    },
+  },
 }
-</style>
+</script> 
