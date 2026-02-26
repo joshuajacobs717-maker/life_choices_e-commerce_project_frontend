@@ -55,8 +55,8 @@ export default createStore({
 
 
 
-    SET_CATEGORIES(state, payload){
-        state.categories = payload
+    SET_CATEGORIES(state, categories){
+        state.categories = categories
     },
     ADD_CATEGORY(state, category) {
       state.categories.push(category)
@@ -233,8 +233,8 @@ export default createStore({
     async createCategory({ commit }, categoryData) {
       try {
         const response = await api.post("/categories", categoryData)
-
-        commit("ADD_CATEGORY", response.data)
+        console.log(response.data)
+        commit("ADD_CATEGORY", response.data.categories)
 
       } catch (error) {
         throw error.response?.data?.message || "Failed To Create Category"
