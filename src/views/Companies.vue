@@ -1,87 +1,273 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
 import CompanyCard from "../components/CompanyCard.vue";
+import api from "@/services/api.js";
+
+const store = useStore();
 
 const companies = ref([]);
 const loading = ref(true);
 const error = ref("");
 
-// ✅ replace with your real backend endpoint
-const API_URL = "http://localhost:3000/api/companies";
+const showModal = ref(false);
+const saving = ref(false);
+const formError = ref("");
+
+const form = ref({
+  name: "",
+  logo: "",
+  description: "",
+  latitude: "",
+  longitude: "",
+});
+
+// ✅ token might be in localStorage even when store is empty after refresh
+const token = computed(() => store.state?.token || localStorage.getItem("token") || "");
+
+// ✅ robust admin check (supports common shapes)
+const isAdmin = computed(() => {
+  const roleFromGetter = store.getters?.userRole;
+  const roleFromState = store.state?.user?.role;
+  const roleNorm = String(roleFromGetter ?? roleFromState ?? "").toLowerCase();
+
+  const u = store.state?.user || {};
+  const flagAdmin =
+    u.is_admin === 1 ||
+    u.is_admin === true ||
+    u.admin === 1 ||
+    u.admin === true;
+
+  return !!token.value && (flagAdmin || roleNorm === "admin" || roleNorm === "administrator");
+});
+
+// ✅ Normalize backend response (supports {companies:[...]} or [...])
+function normalizeCompanies(data) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.companies)) return data.companies;
+  return [];
+}
 
 async function fetchCompanies() {
   try {
     loading.value = true;
     error.value = "";
 
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-
-    const data = await res.json();
-
-    // supports either: [{...}, {...}] OR { companies: [...] }
-    companies.value = Array.isArray(data) ? data : (data.companies || []);
+    const res = await api.get("/companies");
+    companies.value = normalizeCompanies(res.data);
   } catch (e) {
-    error.value = e?.message || "Failed to load companies.";
+    console.error("fetchCompanies error:", e);
+    error.value =
+      e?.response?.data?.message ||
+      e?.message ||
+      "Failed to load companies.";
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(fetchCompanies);
+function openModal() {
+  formError.value = "";
+  form.value = {
+    name: "",
+    logo: "",
+    description: "",
+    latitude: "",
+    longitude: "",
+  };
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+}
+
+function toNumberOrNull(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function submitCompany() {
+  formError.value = "";
+
+  const payload = {
+    name: form.value.name.trim(),
+    logo: form.value.logo.trim(),
+    description: form.value.description.trim(),
+    latitude: toNumberOrNull(form.value.latitude),
+    longitude: toNumberOrNull(form.value.longitude),
+  };
+
+  if (!payload.name) {
+    formError.value = "Company name is required.";
+    return;
+  }
+  if (payload.latitude === null || payload.longitude === null) {
+    formError.value = "Latitude and Longitude must be valid numbers.";
+    return;
+  }
+
+  try {
+    saving.value = true;
+
+    const res = await api.post("/companies", payload);
+    companies.value = normalizeCompanies(res.data);
+
+    showModal.value = false;
+  } catch (e) {
+    console.error("submitCompany error:", e);
+    formError.value =
+      e?.response?.data?.message ||
+      e?.message ||
+      "Failed to create company (are you logged in as admin?).";
+  } finally {
+    saving.value = false;
+  }
+}
+
+onMounted(async () => {
+  // ✅ Always try load user when a token exists (even if store.state.token is empty)
+  if (token.value && !store.state?.user) {
+    try {
+      await store.dispatch("fetchUser");
+    } catch (e) {
+      console.warn("fetchUser failed:", e);
+    }
+  }
+
+  await fetchCompanies();
+});
 </script>
 
 <template>
   <div class="companies-page">
-    <!-- Top Left Header -->
     <div class="page-header">
-      <h1>Companies</h1>
-      <p>List of companies we've partnered with</p>
+      <div class="header-left">
+        <h1>Companies</h1>
+        <p>List of companies we've merged with</p>
+      </div>
+
+      <!-- ✅ Admin add button -->
+      <button v-if="isAdmin" class="admin-btn" @click="openModal">
+        + Add Company
+      </button>
     </div>
 
-    <!-- Cards Area fills the rest -->
     <div class="cards-container">
       <div v-if="loading" class="state">Loading companies...</div>
       <div v-else-if="error" class="state error">{{ error }}</div>
 
+      <div v-else-if="companies.length === 0" class="state">
+        No companies found.
+      </div>
+
       <template v-else>
         <CompanyCard
           v-for="company in companies"
-          :key="company.id || company._id || company.name"
+          :key="company.company_id || company.id || company._id || company.name"
           :company="company"
         />
       </template>
     </div>
+
+    <!-- Modal -->
+    <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Add New Company</h2>
+          <button class="x" @click="closeModal" aria-label="Close">✕</button>
+        </div>
+
+        <form class="modal-body" @submit.prevent="submitCompany">
+          <label>
+            Name
+            <input v-model="form.name" type="text" placeholder="Company name" />
+          </label>
+
+          <label>
+            Logo URL
+            <input v-model="form.logo" type="text" placeholder="https://..." />
+          </label>
+
+          <label>
+            Description
+            <textarea
+              v-model="form.description"
+              rows="3"
+              placeholder="Short description..."
+            />
+          </label>
+
+          <div class="row">
+            <label>
+              Latitude
+              <input v-model="form.latitude" type="text" placeholder="-29.8587" />
+            </label>
+            <label>
+              Longitude
+              <input v-model="form.longitude" type="text" placeholder="31.0218" />
+            </label>
+          </div>
+
+          <p v-if="formError" class="form-error">{{ formError }}</p>
+
+          <div class="modal-actions">
+            <button type="button" class="btn ghost" @click="closeModal">
+              Cancel
+            </button>
+            <button type="submit" class="btn" :disabled="saving">
+              {{ saving ? "Saving..." : "Create" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
-<style>
+<style scoped>
 .companies-page {
   min-height: 100vh;
   padding: 40px;
   box-sizing: border-box;
-
   display: flex;
   flex-direction: column;
 }
 
-/* Header stays top-left */
 .page-header {
-  align-self: flex-start;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 30px;
+  margin-top: 80px;
 }
 
-.page-header h1 {
+.header-left h1 {
   margin: 0;
   font-size: 2.5rem;
 }
 
-.page-header p {
+.header-left p {
   margin: 8px 0 0 0;
   color: #555;
 }
 
-/* Cards fill remaining space */
+.admin-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-btn:hover {
+  transform: translateY(-1px);
+}
+
 .cards-container {
   flex: 1;
   display: grid;
@@ -97,5 +283,118 @@ onMounted(fetchCompanies);
 
 .state.error {
   color: #b00020;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modal {
+  width: min(640px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.x {
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+input,
+textarea {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #111;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-error {
+  margin: 0;
+  color: #b00020;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  background: #fff;
+  color: #111;
+}
+
+@media (max-width: 900px) {
+  .companies-page {
+    padding: 24px 16px;
+  }
+  .row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

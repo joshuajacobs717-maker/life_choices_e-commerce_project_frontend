@@ -53,22 +53,23 @@ export default {
 
     <!-- Walking Path -->
     <div class="path-wrap" :style="{ '--p': progressPercent }">
-      <svg class="trail" viewBox="0 0 320 900" preserveAspectRatio="none" aria-hidden="true">
+      <!-- Wider SVG so the trail can swing more -->
+      <svg class="trail" viewBox="0 0 420 900" preserveAspectRatio="none" aria-hidden="true">
         <path
           class="trail-base"
-          d="M160 880
-             C 70 820, 70 730, 160 660
-             C 250 590, 250 500, 160 430
-             C 70 360, 70 270, 160 200
-             C 250 130, 250 70, 160 40"
+          d="M210 880
+             C 40 820, 40 730, 210 660
+             C 380 590, 380 500, 210 430
+             C 40 360, 40 270, 210 200
+             C 380 130, 380 70, 210 40"
         />
         <path
           class="trail-progress"
-          d="M160 880
-             C 70 820, 70 730, 160 660
-             C 250 590, 250 500, 160 430
-             C 70 360, 70 270, 160 200
-             C 250 130, 250 70, 160 40"
+          d="M210 880
+             C 40 820, 40 730, 210 660
+             C 380 590, 380 500, 210 430
+             C 40 360, 40 270, 210 200
+             C 380 130, 380 70, 210 40"
         />
       </svg>
 
@@ -83,13 +84,11 @@ export default {
             { unlocked: purchaseCount >= m.purchases }
           ]"
         >
-          <!-- label lights up when unlocked -->
           <div class="bubble">
             <p class="m-title">{{ m.purchases }} Purchases</p>
             <p class="m-reward">{{ m.reward }}</p>
           </div>
 
-          <!-- dot lights up when unlocked -->
           <div class="dot"></div>
         </div>
       </div>
@@ -141,10 +140,11 @@ export default {
   --p: 0;
 }
 
+/* Wider container for the trail */
 .trail {
   position: absolute;
   inset: 0;
-  width: 320px;
+  width: 420px; /* was 320px */
   height: 100%;
   left: 50%;
   transform: translateX(-50%);
@@ -154,7 +154,7 @@ export default {
 .trail-base {
   fill: none;
   stroke: rgba(0, 0, 0, 0.16);
-  stroke-width: 18;
+  stroke-width: 18; /* unchanged */
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -162,7 +162,7 @@ export default {
 .trail-progress {
   fill: none;
   stroke: #234fff;
-  stroke-width: 18;
+  stroke-width: 18; /* unchanged */
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1400;
@@ -220,17 +220,15 @@ export default {
   transition: 0.25s ease;
 }
 
-/* ✅ Label lights up when milestone reached */
+/* Unlocked */
 .milestone.unlocked .bubble {
   background: rgba(35, 79, 255, 0.12);
   border-color: rgba(35, 79, 255, 0.45);
   box-shadow: 0 0 0 6px rgba(35, 79, 255, 0.12), 0 14px 28px rgba(35, 79, 255, 0.18);
 }
-
 .milestone.unlocked .m-title {
   color: #234fff;
 }
-
 .milestone.unlocked .m-reward {
   color: #234fff;
   opacity: 0.9;
@@ -258,7 +256,6 @@ export default {
   transform: translateX(calc(-50% + 26px));
 }
 
-/* ✅ Dot lights up when milestone reached */
 .milestone.unlocked .dot {
   background: #234fff;
   box-shadow: 0 0 0 6px rgba(35, 79, 255, 0.18), 0 12px 26px rgba(35, 79, 255, 0.25);
@@ -267,7 +264,7 @@ export default {
 /* Mobile */
 @media (max-width: 700px) {
   .trail {
-    width: 260px;
+    width: 300px; /* was 260px */
   }
 
   .milestone.left,

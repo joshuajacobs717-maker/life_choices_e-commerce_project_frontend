@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import Milestone from "../components/MilestoneTrack.vue";
 import Raffle from "../components/Raffle.vue";
+import SnakeGame from "../components/SnakeGame.vue"; // ✅ NEW
 
 const showPage = ref(false);
 const showLoader = ref(true);
@@ -24,9 +25,15 @@ onMounted(() => {
         console.log("Autoplay blocked by browser");
       });
     }
-
   }, TOTAL_MS);
 });
+
+// ✅ optional: listen for discount unlock
+function onDiscountUnlocked(payload) {
+  // payload = { discountPercent: 5, apples: 50 }
+  console.log("Discount unlocked:", payload);
+  // If you have a Pinia cart/store, this is where you'd apply it
+}
 </script>
 
 <template>
@@ -59,15 +66,24 @@ onMounted(() => {
       <div class="left">
         <Raffle />
       </div>
+
       <div class="right">
         <Milestone />
+
+        <!-- ✅ Snake game sits under milestone -->
+        <section class="snake-slot">
+          <SnakeGame @discount-unlocked="onDiscountUnlocked" />
+        </section>
       </div>
     </div>
   </main>
 
   <!-- 🔊 Hidden Background Audio -->
   <audio ref="audioRef" loop preload="auto">
-    <source src="../assests/mfcc-lounge-jazz-elevator-music-372734 (1).mp3" type="audio/mpeg" />
+    <source
+      src="../assests/mfcc-lounge-jazz-elevator-music-372734 (1).mp3"
+      type="audio/mpeg"
+    />
   </audio>
 </template>
 
@@ -90,7 +106,7 @@ audio {
 /* background layer stretches the full height of .challenges */
 .bg-layer {
   position: absolute;
-  inset: 0;              /* ✅ fills whole .challenges area */
+  inset: 0; /* ✅ fills whole .challenges area */
   z-index: 0;
   pointer-events: none;
 }
@@ -124,22 +140,86 @@ audio {
 }
 
 /* ✅ each streak starts at a different vertical zone */
-.color-1 { top: 10%; background: linear-gradient(90deg, #ff00ff, #00d4ff, #00ff6a); animation-delay: 0s; }
-.color-2 { top: 25%; background: linear-gradient(90deg, #ff3b3b, #ffdd57, #ff00cc); animation-delay: 2.2s; }
-.color-3 { top: 40%; background: linear-gradient(90deg, #00ffcc, #4aa3ff, #b14dff); animation-delay: 4.4s; }
-.color-4 { top: 55%; background: linear-gradient(90deg, #66ff00, #00ffcc, #0099ff); animation-delay: 6.6s; }
-.color-5 { top: 70%; background: linear-gradient(90deg, #ffd000, #ff6a00, #ff0066); animation-delay: 7.8s; }
-.color-6 { top: 85%; background: linear-gradient(90deg, #7c3cff, #00d4ff, #00ff9d); animation-delay: 9.1s; }
-.color-7  { top: 5%;   background: linear-gradient(90deg, #ff5f6d, #ffc371); animation-delay: 1.1s; }
-.color-8  { top: 15%;  background: linear-gradient(90deg, #24c6dc, #514a9d); animation-delay: 3.3s; }
-.color-9  { top: 20%;  background: linear-gradient(90deg, #ff9966, #ff5e62); animation-delay: 5.5s; }
-.color-10 { top: 30%;  background: linear-gradient(90deg, #00f260, #0575e6); animation-delay: 7.7s; }
-.color-11 { top: 35%;  background: linear-gradient(90deg, #e1eec3, #f05053); animation-delay: 8.9s; }
-.color-12 { top: 45%;  background: linear-gradient(90deg, #f953c6, #b91d73); animation-delay: 10.1s; }
-.color-13 { top: 60%;  background: linear-gradient(90deg, #43cea2, #185a9d); animation-delay: 11.3s; }
-.color-14 { top: 75%;  background: linear-gradient(90deg, #ff9a9e, #fad0c4); animation-delay: 13.5s; }
-.color-15 { top: 80%;  background: linear-gradient(90deg, #a1ffce, #faffd1); animation-delay: 14.7s; }
-.color-16 { top: 95%;  background: linear-gradient(90deg, #667eea, #764ba2); animation-delay: 15.9s; }
+.color-1 {
+  top: 10%;
+  background: linear-gradient(90deg, #ff00ff, #00d4ff, #00ff6a);
+  animation-delay: 0s;
+}
+.color-2 {
+  top: 25%;
+  background: linear-gradient(90deg, #ff3b3b, #ffdd57, #ff00cc);
+  animation-delay: 2.2s;
+}
+.color-3 {
+  top: 40%;
+  background: linear-gradient(90deg, #00ffcc, #4aa3ff, #b14dff);
+  animation-delay: 4.4s;
+}
+.color-4 {
+  top: 55%;
+  background: linear-gradient(90deg, #66ff00, #00ffcc, #0099ff);
+  animation-delay: 6.6s;
+}
+.color-5 {
+  top: 70%;
+  background: linear-gradient(90deg, #ffd000, #ff6a00, #ff0066);
+  animation-delay: 7.8s;
+}
+.color-6 {
+  top: 85%;
+  background: linear-gradient(90deg, #7c3cff, #00d4ff, #00ff9d);
+  animation-delay: 9.1s;
+}
+.color-7 {
+  top: 5%;
+  background: linear-gradient(90deg, #ff5f6d, #ffc371);
+  animation-delay: 1.1s;
+}
+.color-8 {
+  top: 15%;
+  background: linear-gradient(90deg, #24c6dc, #514a9d);
+  animation-delay: 3.3s;
+}
+.color-9 {
+  top: 20%;
+  background: linear-gradient(90deg, #ff9966, #ff5e62);
+  animation-delay: 5.5s;
+}
+.color-10 {
+  top: 30%;
+  background: linear-gradient(90deg, #00f260, #0575e6);
+  animation-delay: 7.7s;
+}
+.color-11 {
+  top: 35%;
+  background: linear-gradient(90deg, #e1eec3, #f05053);
+  animation-delay: 8.9s;
+}
+.color-12 {
+  top: 45%;
+  background: linear-gradient(90deg, #f953c6, #b91d73);
+  animation-delay: 10.1s;
+}
+.color-13 {
+  top: 60%;
+  background: linear-gradient(90deg, #43cea2, #185a9d);
+  animation-delay: 11.3s;
+}
+.color-14 {
+  top: 75%;
+  background: linear-gradient(90deg, #ff9a9e, #fad0c4);
+  animation-delay: 13.5s;
+}
+.color-15 {
+  top: 80%;
+  background: linear-gradient(90deg, #a1ffce, #faffd1);
+  animation-delay: 14.7s;
+}
+.color-16 {
+  top: 95%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  animation-delay: 15.9s;
+}
 
 /* Move left-to-right across the section */
 @keyframes floatRandom {
@@ -213,7 +293,6 @@ audio {
   gap: 40px;
   padding: 40px;
 
-  /* ✅ allow page to become taller than viewport */
   min-height: 100vh;
   box-sizing: border-box;
 
@@ -227,10 +306,43 @@ audio {
   flex-direction: column;
 }
 
+/* ✅ spacing between Milestone and Snake */
+.right {
+  gap: 18px;
+}
+
+/* ✅ Snake fits inside the right column nicely */
+.snake-slot {
+  width: 100%;
+  max-width: 720px; /* prevents it from getting too wide on huge screens */
+}
+
+/* Make the snake component scale down cleanly */
+.snake-slot :deep(.game) {
+  grid-template-columns: 1fr; /* stack board + controls inside right column */
+}
+
+.snake-slot :deep(.controls) {
+  grid-template-columns: 1fr;
+}
+
+/* Slightly shrink canvas on smaller screens */
+@media (max-width: 1100px) {
+  .snake-slot {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
   .page {
     flex-direction: column;
     padding: 24px 16px;
+  }
+
+  .snake-slot :deep(.board) {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
   }
 }
 

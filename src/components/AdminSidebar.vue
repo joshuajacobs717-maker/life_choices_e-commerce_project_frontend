@@ -15,7 +15,7 @@ const route = useRoute()
 
       <li class="nav-item">
         <router-link
-          to="/admin/businesses"
+          to="/admin/companies"
           class="nav-link text-white"
           :class="{ active: route.path.includes('businesses') }"
         >

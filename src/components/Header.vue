@@ -58,7 +58,7 @@ onUnmounted(() => {
     <!-- CENTER -->
     <div class="menu-container">
       <button><router-link class="link" to="/home">Home</router-link></button>
-      <button><router-link to="/businesses">Businesses</router-link></button>
+      <button><router-link class="link" to="/companies">Businesses</router-link></button>
       <button><router-link class="link" to="/contact">Contact Us</router-link></button>
     </div>
 
@@ -132,6 +132,7 @@ onUnmounted(() => {
 .menu-container {
   display: flex;
   gap: 10px;
+  margin-right: 150px;
 }
 
 .menu-container button {

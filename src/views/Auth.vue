@@ -368,13 +368,12 @@ h1 {
   padding: 0;
 }
 .primary-btn {
-  margin-top: 6px;
+  margin-top: 2px;
   height: 44px;
   border: 0;
   border-radius: 999px;
   background: #5eb5f2;
   color: #fff;
-  font-size: 1.35rem;
   font-weight: 600;
   cursor: pointer;
 }
