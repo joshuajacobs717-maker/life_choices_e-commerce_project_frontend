@@ -5,6 +5,7 @@ import Auth from '@/views/Auth.vue'
 import Contact from '@/views/Contact.vue'
 import OurStory from '@/views/OurStory.vue'
 import Challenges from '@/views/Challenges.vue'
+import Cart from '@/views/Cart.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
 
 const router = createRouter({
@@ -87,6 +88,11 @@ const router = createRouter({
     path: '/challenges',
     name: 'Challenges',
     component: Challenges,
+  },
+  {
+    path: '/cart',
+    name: 'Cart',
+    component: Cart,
   }
   ],
 })

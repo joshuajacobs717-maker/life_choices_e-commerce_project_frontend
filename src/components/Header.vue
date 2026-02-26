@@ -56,9 +56,11 @@ onUnmounted(() => {
 
     <!-- RIGHT -->
     <div class="right-section">
-      <div class="cart">
-        <i class="fa-solid fa-cart-shopping"></i>
-      </div>
+      <router-link class="cart-link" to="/cart" aria-label="Go to cart">
+        <div class="cart">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+      </router-link>
 
       <div class="login-options">
         <button class="login-btn" @click="goToAuth('login')">Login</button>
@@ -138,6 +140,22 @@ onUnmounted(() => {
 .cart {
     font-size: 20px;
     cursor: pointer;
+    color: inherit;
+}
+.cart-link {
+    background: #040404;
+    color: #E7E7E7;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.cart-link:hover {
+    background-color: #E7E7E7;
     color: #040404;
 }
 
@@ -155,7 +173,7 @@ onUnmounted(() => {
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
-    transition: 0.2s
+    transition: 0.2sg
 }
 
 .login-btn:hover,
