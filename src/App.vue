@@ -19,6 +19,7 @@ const layoutComponent = computed(() => {
   if (layout === "admin") return AdminLayout
   return CustomerLayout
 })
+
 </script>
 
 <template>
