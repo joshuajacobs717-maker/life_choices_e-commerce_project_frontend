@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-const isVisible = ref(true) // header visibility
+const isVisible = ref(true)
 const router = useRouter()
 let lastScrollY = window.scrollY
 
@@ -15,13 +15,13 @@ function goToAuth(mode) {
 
 function handleScroll() {
   const currentScroll = window.scrollY
+
   if (currentScroll > lastScrollY && currentScroll > 30) {
-    // scrolling down -> hide header
     isVisible.value = false
   } else {
-    // scrolling up -> show header
     isVisible.value = true
   }
+
   lastScrollY = currentScroll
 }
 
@@ -42,15 +42,23 @@ onUnmounted(() => {
 
     <!-- LEFT -->
     <div class="logo-container">
-      <h2 class="logo">
-        <i class="fa-solid fa-eye"></i> Impulsive Shopping
-      </h2>
+      <a 
+        href="https://youtu.be/pvbU_Ouj2Wc"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="logo-link"
+      >
+        <h2 class="logo">
+          <i class="fa-solid fa-eye"></i>
+          Impulsive Shopping
+        </h2>
+      </a>
     </div>
 
     <!-- CENTER -->
     <div class="menu-container">
       <button><router-link class="link" to="/home">Home</router-link></button>
-      <button>Brands</button>
+      <button><router-link class="link" to="/companies">Businesses</router-link></button>
       <button><router-link class="link" to="/contact">Contact Us</router-link></button>
     </div>
 
@@ -63,8 +71,12 @@ onUnmounted(() => {
       </router-link>
 
       <div class="login-options">
-        <button class="login-btn" @click="goToAuth('login')">Login</button>
-        <button class="signup-btn" @click="goToAuth('register')">Sign Up</button>
+        <button class="login-btn" @click="goToAuth('login')">
+          Login
+        </button>
+        <button class="signup-btn" @click="goToAuth('register')">
+          Sign Up
+        </button>
       </div>
     </div>
 
@@ -72,69 +84,89 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+
 /* MAIN NAVBAR */
 .nav-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 10px;
-    padding-right: 10px;
-    background-color: transparent;
-    color: white;
-    z-index: 1000;
-    cursor: context-menu;
-    transition: top 0.3s ease; /* Added for smooth hide/show */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 20px;
+
+  background-color: transparent;
+  color: #040404;
+  z-index: 1000;
+
+  transition: top 0.3s ease;
 }
 
-/* Hides header */
+/* Hide on scroll */
 .nav-container.hidden {
-  top: -80px; /* moves header out of view */
+  top: -80px;
 }
 
-/* LEFT */
+/* LOGO */
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .logo {
-    font-weight: bold;
-    color: #040404;
-    background: transparent;
-    padding: 3px;
-    border-radius: 15px;
-    margin-left: 10px;
+  font-weight: bold;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* CENTER */
+.logo-link:hover {
+  opacity: 0.8;
+}
+
+/* CENTER MENU */
 .menu-container {
-    display: flex;
-    gap: 5px;
-    margin-right: 180px;
+  display: flex;
+  gap: 10px;
+  margin-right: 150px;
 }
 
 .menu-container button {
-    background-color: #E7E7E7;
-    border: none;
-    border-radius: 10px;
-    padding: 3px;
-    width: 100px;
-    color: #040404;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.2s
+  background-color: #E7E7E7;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 12px;
+  width: 120px;
+
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .menu-container button:hover {
-    color: #E7E7E7;
-    background-color: #040404;
+  background-color: #040404;
+}
+
+.link {
+  text-decoration: none;
+  color: #040404;
+}
+
+.menu-container button:hover .link {
+  color: #E7E7E7;
 }
 
 /* RIGHT SECTION */
 .right-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .cart {
@@ -160,9 +192,8 @@ onUnmounted(() => {
 }
 
 .login-options {
-    display: flex;
-    gap: 10px;
-    margin-right: 50px;
+  display: flex;
+  gap: 10px;
 }
 
 .login-btn,
@@ -170,15 +201,15 @@ onUnmounted(() => {
     background: #040404;
     border: none;
     color: #E7E7E7;
-    padding: 10px;
     border-radius: 5px;
-    cursor: pointer;
-    transition: 0.2sg
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .login-btn:hover,
 .signup-btn:hover {
-    background-color: #E7E7E7;
-    color: #040404;
+  background-color: #E7E7E7;
+  color: #040404;
 }
 </style>

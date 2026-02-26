@@ -7,6 +7,9 @@ import OurStory from '@/views/OurStory.vue'
 import Challenges from '@/views/Challenges.vue'
 import Cart from '@/views/Cart.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
+import CategoriesView from '@/views/CategoriesView.vue'
+import OrdersView from '@/views/OrdersView.vue'
+import Companies from '@/views/Companies.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +17,11 @@ const router = createRouter({
       {
     path: '/',
     redirect: '/home'
+  },
+  {
+      path: "/companies",
+      component: Companies,
+      meta: {layout: "default"}
   },
   {
     path: '/home',
@@ -34,27 +42,27 @@ const router = createRouter({
       layout: "admin",
       requiresAuth: true,
       role: "Admin"
+    },
+    children: [
+    {
+      path: "products",
+      component: Products
+    },
+    {
+      path: "categories",
+      component: CategoriesView
+    },
+    {
+      path: "orders",
+      component: OrdersView
+    },
+    {
+      path: "companies",
+      component: Companies
     }
-    // children: [
-    // {
-    //   path: "products",
-    //   component: AdminProducts
-    // },
-    // {
-    //   path: "categories",
-    //   component: AdminCategories
-    // },
-    // {
-    //   path: "orders",
-    //   component: AdminOrders
-    // },
-    // {
-    //   path: "businesses",
-    //   component: AdminBusinesses
-    // }
-    // ]
+    ]
 
-  },  
+  }, 
   {
     path: '/products',
     name: 'Products',

@@ -4,9 +4,8 @@ import { ref, onMounted } from 'vue'
 import Hero from '../components/Hero.vue'
 import TopCat from '../components/CategoryDiv.vue'
 import Products from '../components/ProductsDiv.vue'
-import About from '../components/AboutDiv.vue'
 import Questions from '../components/FrequentlyAskDiv.vue'
-import Socials from '../components/Socials.vue'
+
 
 const showBlink = ref(true)
 
@@ -22,9 +21,8 @@ onMounted(() => {
   <Hero />
   <TopCat />
   <Products />
-  <About />
   <Questions />
-  <Socials />
+
 
   <!-- FULLSCREEN PIXEL EYE -->
   <div v-if="showBlink" class="eye-overlay">
