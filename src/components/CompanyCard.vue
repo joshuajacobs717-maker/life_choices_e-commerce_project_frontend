@@ -1,31 +1,87 @@
-<script>
-export default {
-  name: "CompanyCard"
+<script setup>
+import { computed } from "vue"; // ✅ REQUIRED
+
+const props = defineProps({
+  company: {
+    type: Object,
+    required: true,
+  },
+});
+
+const emit = defineEmits(["view-on-map"]);
+
+function getLatLng(company) {
+  const lat =
+    company.latitude ??
+    company.lat ??
+    company.coordinates?.lat ??
+    (Array.isArray(company.coordinates) ? company.coordinates[1] : undefined);
+
+  const lng =
+    company.longitude ??
+    company.lng ??
+    company.coordinates?.lng ??
+    (Array.isArray(company.coordinates) ? company.coordinates[0] : undefined);
+
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+
+  if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return null;
+  return { lat: latNum, lng: lngNum };
 }
+
+function openInGoogleMaps() {
+  const ll = getLatLng(props.company);
+  if (!ll) return;
+
+  const url = `https://www.google.com/maps?q=${ll.lat},${ll.lng}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+
+  emit("view-on-map", { ...ll, company: props.company });
+}
+
+const logoSrc = computed(() => {
+  return (
+    props.company.logo ||
+    props.company.logoUrl ||
+    props.company.image ||
+    props.company.imageUrl ||
+    "https://via.placeholder.com/250x180"
+  );
+});
+
+const titleText = computed(
+  () => props.company.name || props.company.company_name || "Company"
+);
+
+const descriptionText = computed(
+  () =>
+    props.company.description ||
+    props.company.company_description ||
+    "No description provided."
+);
+
+const hasCoords = computed(() => !!getLatLng(props.company));
 </script>
 
 <template>
   <div class="brand">
-    
-    <!-- LEFT SIDE -->
     <div class="brand-left">
-      <img src="https://via.placeholder.com/250x180" alt="Equipment">
-      <h4>Brandname</h4>
+      <img :src="logoSrc" :alt="titleText" />
+      <h4>{{ titleText }}</h4>
     </div>
 
-    <!-- RIGHT SIDE -->
     <div class="brand-right">
-      <p>
-        This is the brand description. You can add more text here and it will
-        stay aligned nicely on the right side of the card.
-      </p>
-      <button>View On Map</button>
-    </div>
+      <p>{{ descriptionText }}</p>
 
+      <button :disabled="!hasCoords" @click="openInGoogleMaps">
+        {{ hasCoords ? "View On Map" : "No Location" }}
+      </button>
+    </div>
   </div>
 </template>
 
-<style>
+<style scoped>
 .brand {
   display: flex;
   align-items: center;
@@ -44,7 +100,6 @@ export default {
   transform: translateY(-5px);
 }
 
-/* LEFT SIDE */
 .brand-left {
   display: flex;
   flex-direction: column;
@@ -56,9 +111,9 @@ export default {
   width: 100%;
   border-radius: 10px;
   margin-bottom: 10px;
+  object-fit: cover;
 }
 
-/* RIGHT SIDE */
 .brand-right {
   flex: 1;
   display: flex;
@@ -73,7 +128,6 @@ export default {
   color: #333;
 }
 
-/* BUTTON */
 button {
   align-self: flex-start;
   padding: 10px 18px;
@@ -89,7 +143,11 @@ button:hover {
   background-color: #484848;
 }
 
-/* Responsive (Mobile) */
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .brand {
     flex-direction: column;

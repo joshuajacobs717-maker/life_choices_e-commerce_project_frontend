@@ -1,4 +1,5 @@
-<script>
+<script setup>
+import Socials from '../components/Socials.vue';
 </script>
 
 <template>
@@ -51,7 +52,8 @@
         </p>
       </article>
     </section>
-
+    
+    <Socials />
   </main>
 </template>
 

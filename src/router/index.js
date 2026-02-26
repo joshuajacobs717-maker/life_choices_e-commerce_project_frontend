@@ -18,7 +18,7 @@ const router = createRouter({
     redirect: '/home'
   },
   {
-      path: "/businesses",
+      path: "/companies",
       component: Companies,
       meta: {layout: "default"}
   },
@@ -56,7 +56,7 @@ const router = createRouter({
       component: OrdersView
     },
     {
-      path: "businesses",
+      path: "companies",
       component: Companies
     }
     ]
