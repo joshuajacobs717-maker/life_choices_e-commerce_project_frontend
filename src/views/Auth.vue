@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
+import api from "@/services/api.js";
 
 const store = useStore();
 const route = useRoute();
@@ -9,32 +10,53 @@ const router = useRouter();
 
 const activeMode = ref("login");
 
+// ✅ login has optional role (frontend-only for redirect), defaults to Customer
 const loginForm = ref({
   email: "",
   password: "",
+  role: "", // optional (Admin / Customer)
   remember: false,
 });
 
+// ✅ register includes phone number + role (DB allows ONLY Admin/Customer)
 const registerForm = ref({
   name: "",
   surname: "",
   email: "",
+  phone_number: "",
   password: "",
   confirmPassword: "",
+  role: "Customer", // ✅ default matches DB enum
   agree: false,
 });
 
-const googleUser = ref(null); // Google ID token
+const googleUser = ref(null);
 
 const isLoginMode = computed(() => activeMode.value === "login");
 
-// Toggle login/register mode
 function setMode(mode) {
   activeMode.value = mode;
   router.replace({ path: "/auth", query: { mode } });
 }
 
-// Email login/register handlers
+function normalizeRole(role) {
+  return String(role || "").trim().toLowerCase();
+}
+
+// ✅ Convert user input -> EXACT enum values your DB supports
+function toDbRole(inputRole, fallback = "Customer") {
+  const r = String(inputRole || "").trim().toLowerCase();
+
+  if (r === "admin") return "Admin";
+  if (r === "customer") return "Customer";
+
+  // common mistakes -> map to Customer
+  if (r === "client" || r === "user" || r === "cust") return "Customer";
+
+  return fallback; // default Customer
+}
+
+// ✅ Login
 async function submitLogin() {
   try {
     const user = await store.dispatch("login", {
@@ -42,43 +64,85 @@ async function submitLogin() {
       password: loginForm.value.password,
     });
 
-    // Redirect based on role
-    if (user.role === "Admin") {
-      router.push("/admin");
-    } else {
-      router.push("/home");
-    }
+    // use backend role first, else user typed role, else Customer
+    const backendRole = normalizeRole(user?.role);
+    const chosenRole = normalizeRole(loginForm.value.role);
+
+    const finalRole =
+      backendRole || normalizeRole(toDbRole(chosenRole, "Customer"));
+
+    router.push(finalRole === "admin" ? "/admin" : "/home");
   } catch (error) {
-    alert(error);
+    alert(error?.response?.data?.message || error?.message || error);
   }
 }
 
-function submitRegister() {
-  if (registerForm.value.password !== registerForm.value.confirmPassword) {
-    alert("Passwords do not match");
-    return;
+// ✅ Register -> Save to DB -> auto login -> redirect
+async function submitRegister() {
+  try {
+    if (registerForm.value.password !== registerForm.value.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    if (!registerForm.value.agree) {
+      alert("Please accept the Terms & Conditions");
+      return;
+    }
+
+    const payload = {
+      first_name: registerForm.value.name.trim(),
+      last_name: registerForm.value.surname.trim(),
+      email: registerForm.value.email.trim(),
+      phone_number: registerForm.value.phone_number.trim(),
+      role: toDbRole(registerForm.value.role, "Customer"), // ✅ Admin/Customer only
+      password: registerForm.value.password,
+    };
+
+    await api.post("/users/register", payload);
+
+    const user = await store.dispatch("login", {
+      email: payload.email,
+      password: payload.password,
+    });
+
+    const role = normalizeRole(user?.role || payload.role);
+    router.push(role === "admin" ? "/admin" : "/home");
+  } catch (error) {
+    const msg =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Registration failed";
+    alert(msg);
   }
-
-  console.log("Email register:", registerForm.value);
-
-  // Example (if you have a Vuex action later):
-  // store.dispatch("register", { ...registerForm.value })
 }
 
-// ------------------- Google Login -------------------
+// ------------------- Google Login (unchanged placeholder) -------------------
 function handleGoogleResponse(response) {
   console.log("Google ID token:", response.credential);
   googleUser.value = response.credential;
-  // Send this token to your backend for verification/session
 }
 
 function signInWithGoogle() {
   if (!window.google) return console.error("Google SDK not loaded");
-  window.google.accounts.id.prompt(); // shows popup / One Tap
+  window.google.accounts.id.prompt();
 }
 
-// Initialize Google Identity Services
-onMounted(() => {
+onMounted(async () => {
+  if (store.state?.token && !store.state?.user) {
+    try {
+      await store.dispatch("fetchUser");
+    } catch {
+      // ignore
+    }
+  }
+
+  if (store.state?.user?.role) {
+    const role = normalizeRole(store.state.user.role);
+    router.replace(role === "admin" ? "/admin" : "/home");
+    return;
+  }
+
   if (!window.google) return;
 
   window.google.accounts.id.initialize({
@@ -89,7 +153,6 @@ onMounted(() => {
   });
 });
 
-// Watch query param mode
 watch(
   () => route.query.mode,
   (mode) => {
@@ -102,43 +165,44 @@ watch(
 <template>
   <main class="auth-page">
     <div class="back-to-home">
-    <router-link class="btn-link" to="/home" ><button>Back</button></router-link>
+      <router-link class="btn-link" to="/home">
+        <button>Back</button>
+      </router-link>
     </div>
+
     <div class="wave-background" aria-hidden="true"></div>
+
     <section class="auth-card">
       <h1>{{ isLoginMode ? "Welcome back !" : "Create an account" }}</h1>
 
       <p v-if="isLoginMode" class="subtitle">Please enter your details</p>
       <p v-else class="subtitle">
         Already have an account?
-        <button
-          type="button"
-          class="switch-btn inline"
-          @click="setMode('login')"
-        >
+        <button type="button" class="switch-btn inline" @click="setMode('login')">
           Login
         </button>
       </p>
 
-      <!-- Login Form -->
+      <!-- Login -->
       <form v-if="isLoginMode" class="auth-form" @submit.prevent="submitLogin">
         <div class="field">
           <label for="login-email">Email</label>
-          <input
-            id="login-email"
-            v-model="loginForm.email"
-            type="email"
-            required
-          />
+          <input id="login-email" v-model="loginForm.email" type="email" required />
         </div>
 
         <div class="field">
           <label for="login-password">Password</label>
+          <input id="login-password" v-model="loginForm.password" type="password" required />
+        </div>
+
+        <!-- ✅ optional role -->
+        <div class="field">
+          <label for="login-role">Role (optional)</label>
           <input
-            id="login-password"
-            v-model="loginForm.password"
-            type="password"
-            required
+            id="login-role"
+            v-model="loginForm.role"
+            type="text"
+            placeholder="Customer"
           />
         </div>
 
@@ -164,47 +228,37 @@ watch(
         </p>
       </form>
 
-      <!-- Register Form -->
-       
+      <!-- Register -->
       <form v-else class="auth-form" @submit.prevent="submitRegister">
         <div class="field">
           <label for="register-name">Name</label>
-          <input
-            id="register-name"
-            v-model="registerForm.name"
-            type="text"
-            required
-          />
+          <input id="register-name" v-model="registerForm.name" type="text" required />
         </div>
 
         <div class="field">
           <label for="register-surname">Surname</label>
-          <input
-            id="register-surname"
-            v-model="registerForm.surname"
-            type="text"
-            required
-          />
+          <input id="register-surname" v-model="registerForm.surname" type="text" required />
         </div>
 
         <div class="field">
           <label for="register-email">Email</label>
+          <input id="register-email" v-model="registerForm.email" type="email" required />
+        </div>
+
+        <div class="field">
+          <label for="register-phone">Phone Number</label>
           <input
-            id="register-email"
-            v-model="registerForm.email"
-            type="email"
+            id="register-phone"
+            v-model="registerForm.phone_number"
+            type="tel"
             required
+            placeholder="e.g. 0721234567"
           />
         </div>
 
         <div class="field">
           <label for="register-password">Password</label>
-          <input
-            id="register-password"
-            v-model="registerForm.password"
-            type="password"
-            required
-          />
+          <input id="register-password" v-model="registerForm.password" type="password" required />
         </div>
 
         <div class="field">
@@ -217,13 +271,19 @@ watch(
           />
         </div>
 
-        <label class="checkbox-row" for="terms">
+        <!-- ✅ role limited to Admin/Customer by mapping -->
+        <div class="field">
+          <label for="register-role">Role</label>
           <input
-            id="terms"
-            v-model="registerForm.agree"
-            type="checkbox"
-            required
+            id="register-role"
+            v-model="registerForm.role"
+            type="text"
+            placeholder="Customer"
           />
+        </div>
+
+        <label class="checkbox-row" for="terms">
+          <input id="terms" v-model="registerForm.agree" type="checkbox" required />
           <span>I agree to the Terms &amp; Conditions</span>
         </label>
 
@@ -247,6 +307,7 @@ watch(
 </template>
 
 <style scoped>
+/* unchanged styling */
 .auth-page {
   min-height: calc(100vh - 70px);
   position: relative;
@@ -256,23 +317,21 @@ watch(
   background: #ffffff;
   overflow: hidden;
 }
-.btn-link button{
-  position: fixed;      /* stays in top-left even when scrolling */
+.btn-link button {
+  position: fixed;
   top: 20px;
   left: 20px;
-  z-index: 1000;        /* above background effects */
+  z-index: 1000;
   padding: 8px 14px;
   border: none;
   border-radius: 8px;
   text-decoration: none;
   background-color: #171717;
   color: #fff;
-  text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.25s ease;
 }
-
 .btn-link button:hover {
   background-color: #949393;
 }
@@ -281,24 +340,17 @@ watch(
   position: absolute;
   inset: 0;
   width: 200%;
-  background: repeating-linear-gradient(
-    to right,
-    #171717 6px 8px,
-    transparent 2px 10px
-  );
+  background: repeating-linear-gradient(to right, #171717 6px 8px, transparent 2px 10px);
   animation: waveMove 8s linear infinite;
   opacity: 0.25;
   pointer-events: none;
   z-index: 0;
 }
 @keyframes waveMove {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
+
 .auth-card {
   width: min(460px, 100%);
   background: #ececec;
@@ -308,6 +360,7 @@ watch(
   z-index: 1;
   box-sizing: border-box;
 }
+
 h1 {
   margin: 0;
   text-align: center;
@@ -321,6 +374,7 @@ h1 {
   color: #727272;
   font-size: 0.9rem;
 }
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -343,6 +397,7 @@ h1 {
   color: #1f1f1f;
   outline: none;
 }
+
 .row {
   display: flex;
   justify-content: space-between;
@@ -367,6 +422,7 @@ h1 {
   cursor: pointer;
   padding: 0;
 }
+
 .primary-btn {
   margin-top: 2px;
   height: 44px;
@@ -377,6 +433,7 @@ h1 {
   font-weight: 600;
   cursor: pointer;
 }
+
 .google-btn {
   height: 44px;
   border: 0;
@@ -391,6 +448,7 @@ h1 {
   justify-content: center;
   gap: 10px;
 }
+
 .divider {
   position: relative;
   text-align: center;
@@ -410,6 +468,7 @@ h1 {
   background: #ececec;
   padding: 0 10px;
 }
+
 .bottom-text {
   margin: 8px 0 0;
   text-align: center;
@@ -427,20 +486,11 @@ h1 {
 .switch-btn.inline {
   margin-left: 4px;
 }
+
 @media (max-width: 640px) {
-  .auth-page {
-    padding-top: 96px;
-  }
-  .auth-card {
-    padding: 28px 20px 24px;
-    border-radius: 12px;
-  }
-  h1 {
-    font-size: 2.1rem;
-  }
-  .row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .auth-page { padding-top: 96px; }
+  .auth-card { padding: 28px 20px 24px; border-radius: 12px; }
+  h1 { font-size: 2.1rem; }
+  .row { flex-direction: column; align-items: flex-start; }
 }
 </style>
