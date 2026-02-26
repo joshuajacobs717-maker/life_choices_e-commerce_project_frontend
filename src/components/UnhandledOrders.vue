@@ -3,7 +3,7 @@
     <div class="table-responsive">
       <div class="d-flex flex-column gap-2">
         <div
-          v-for="order in processingOrders"
+          v-for="order in unhandledOrders"
           :key="order.id"
           class="d-flex align-items-center justify-content-between border-bottom py-2"
         >
@@ -21,8 +21,8 @@
           </button>
         </div>
 
-        <div v-if="processingOrders.length === 0" class="text-center py-4 text-muted">
-          No processing orders
+        <div v-if="unhandledOrders.length === 0" class="text-center py-4 text-muted">
+          Orders will appear here
         </div>
       </div>
     </div>
@@ -44,6 +44,7 @@
             <p><strong>Customer:</strong> {{ selectedOrder.customer }}</p>
             <p><strong>Total:</strong> R {{ selectedOrder.total }}</p>
             <p><strong>Status:</strong> {{ selectedOrder.status }}</p>
+            <p><strong>Resolution:</strong> {{ getResolution(selectedOrder) }}</p>
 
             <!-- Items Table -->
             <h6 class="mt-3">Items</h6>
@@ -64,11 +65,18 @@
               </tbody>
             </table>
 
-            <hr />
-            <h6>Update Stage</h6>
-            <button class="btn btn-outline-primary btn-sm me-2" @click="updateStatus('relayed')">Relayed</button>
-            <button class="btn btn-outline-success btn-sm me-2" @click="updateStatus('delivered')">Delivered</button>
-            <button class="btn btn-outline-danger btn-sm" @click="cancelOrder">Cancel</button>
+            <!-- Move to Processing Button -->
+            <div v-if="selectedOrder.status === 'pending'" class="mt-3">
+              <button
+                class="btn btn-success"
+                @click="moveToProcessing(selectedOrder)"
+              >
+                Move to Processing
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="closeModal">Close</button>
           </div>
         </div>
       </div>
@@ -78,17 +86,30 @@
 
 <script>
 export default {
-  name: 'ProcessingOrders',
-  props: ['orders'],
-  data() { return { selectedOrder: null } },
+  name: 'UnhandledOrders',
+  props: ['orders', 'activeSection'],
+  emits: ['update:activeSection'],
+  data() {
+    return { selectedOrder: null }
+  },
   computed: {
-    processingOrders() { return this.orders.filter(o => ['relayed', 'delivered'].includes(o.status)) },
+    unhandledOrders() {
+      return this.orders.filter(o => o.status === 'pending' || o.status === 'unhandled')
+    },
   },
   methods: {
     openModal(order) { this.selectedOrder = order },
     closeModal() { this.selectedOrder = null },
-    updateStatus(newStatus) { this.selectedOrder.status = newStatus; this.closeModal() },
-    cancelOrder() { this.selectedOrder.status = 'cancelled'; this.closeModal() },
+
+    getResolution(order) {
+      return order.status === 'pending' ? 'Unhandled' : 'In Progress'
+    },
+
+    moveToProcessing(order) {
+      order.status = 'relayed'
+      this.closeModal()
+      this.$emit('update:activeSection', 'processing')
+    },
   },
 }
 </script>

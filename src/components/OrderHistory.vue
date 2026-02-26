@@ -1,66 +1,102 @@
-<script setup>
-import { computed } from 'vue'
-
-// Props: full orders array
-defineProps({
-  orders: {
-    type: Array,
-    required: true,
-  },
-})
-
-// Today's date
-const today = new Date()
-
-// Filter historical orders
-const orderHistory = computed(() =>
-  orders.filter(order => new Date(order.date) < today)
-)
-
-// Function to compute dynamic status
-const getHistoryStatus = (order) => {
-  const orderDate = new Date(order.date)
-  const diffDays = Math.floor((today - orderDate) / (1000 * 60 * 60 * 24))
-
-  if (order.status.toLowerCase() === 'cancelled') return 'Cancelled'
-  if (diffDays < 25 && order.status.toLowerCase() === 'processing') return 'Processing'
-  if (diffDays >= 25 && order.status.toLowerCase() !== 'delivered') return 'Failed'
-  return order.status
-}
-</script>
-
 <template>
   <div>
-    <h4 class="mb-3">Order History</h4>
-
     <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-          <tr>
-            <th>Order ID</th>
-            <th>User Details</th>
-            <th>Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="order in orderHistory" :key="order.id">
-            <td>{{ order.id }}</td>
-            <td>{{ order.userDetails }}</td>
-            <td>{{ order.date }}</td>
-            <td>{{ getHistoryStatus(order) }}</td>
-          </tr>
-          <tr v-if="orderHistory.length === 0">
-            <td colspan="4" class="text-center text-muted py-3">No historical orders</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="d-flex flex-column gap-2">
+        <div
+          v-for="order in historyOrders"
+          :key="order.id"
+          class="d-flex align-items-center justify-content-between border-bottom py-2"
+        >
+          <div class="d-flex w-100">
+            <div class="me-3" style="min-width: 150px;">{{ order.id }}</div>
+            <div class="me-3" style="min-width: 250px;">{{ order.customer }}</div>
+            <div class="me-3" style="min-width: 120px;">{{ order.status }}</div>
+          </div>
+
+          <button
+            class="btn btn-outline-primary rounded-pill px-3 py-1"
+            @click="openModal(order)"
+          >
+            Details &gt;
+          </button>
+        </div>
+
+        <div v-if="historyOrders.length === 0" class="text-center py-4 text-muted">
+          No history orders
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      v-if="selectedOrder"
+      class="modal fade show d-block"
+      tabindex="-1"
+      style="background: rgba(0,0,0,0.5)"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Order Details - {{ selectedOrder.id }}</h5>
+            <button type="button" class="btn-close" @click="closeModal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Customer:</strong> {{ selectedOrder.customer }}</p>
+            <p><strong>Total:</strong> R {{ selectedOrder.total }}</p>
+            <p><strong>Status:</strong> {{ selectedOrder.status }}</p>
+            <p><strong>Resolution:</strong> {{ getResolution(selectedOrder) }}</p>
+
+            <!-- Items Table -->
+            <h6 class="mt-3">Items</h6>
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in selectedOrder.items" :key="index">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>R {{ item.price }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="closeModal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
-<style>
-table th, table td {
-  min-width: 120px;
+<script>
+export default {
+  name: 'OrderHistory',
+  props: ['orders'],
+  data() { return { selectedOrder: null } },
+  computed: {
+    historyOrders() {
+      const now = new Date()
+      return this.orders.filter(o =>
+        ['delivered', 'cancelled'].includes(o.status) ||
+        (o.status === 'pending' && Math.floor((now - new Date(o.createdAt))/(1000*60*60*24)) >= 25)
+      )
+    }
+  },
+  methods: {
+    openModal(order) { this.selectedOrder = order },
+    closeModal() { this.selectedOrder = null },
+    getResolution(order) {
+      if (order.status === 'delivered') return 'Completed'
+      if (order.status === 'cancelled') return 'Cancelled'
+      return 'Unhandled'
+    }
+  }
 }
-</style>
+</script>
