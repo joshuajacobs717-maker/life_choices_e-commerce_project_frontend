@@ -1,9 +1,18 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import Cards from "@/components/CatergoryCards.vue";
+import { useStore } from "vuex";
 
 // Track the currently active category
 const activeCategory = ref("All");
+const REWARD_TARGET_APPLES = 50;
+const store = useStore();
+
+const snakeApples = computed(() => store.getters.snakeApples);
+const snakeDiscountUnlocked = computed(() => store.getters.snakeDiscountUnlocked);
+const applesRemaining = computed(() =>
+  Math.max(REWARD_TARGET_APPLES - snakeApples.value, 0),
+);
 
 // List of categories
 const categories = ["All", "Equipment", "Appliances", "Clothing"];
@@ -20,6 +29,16 @@ function selectCategory(category) {
     <div class="title">
       <h1>Products</h1>
       <p>Pick Which Category Below</p>
+      <div class="snake-banner" :class="{ unlocked: snakeDiscountUnlocked }">
+        <p v-if="snakeDiscountUnlocked">
+          Snake reward unlocked: 5% off is active for any product at checkout.
+        </p>
+        <p v-else>
+          Eat {{ applesRemaining }} more apples in the Snake Challenge to unlock 5%
+          off any product.
+        </p>
+        <router-link class="snake-link" to="/challenges">Play challenge</router-link>
+      </div>
     </div>
 
     <!-- Buttons + Search -->
@@ -76,6 +95,34 @@ function selectCategory(category) {
   margin: 4px 0 0 0;
   font-size: 1rem;
   color: #555;
+}
+.snake-banner {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cbcbcb;
+  background: #f7f7f7;
+  max-width: 620px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.snake-banner p {
+  margin: 0;
+  color: #1a1a1a;
+}
+.snake-banner.unlocked {
+  border-color: #22944a;
+  background: #eef9f2;
+}
+.snake-link {
+  text-decoration: none;
+  font-weight: 600;
+  color: #161616;
+}
+.snake-link:hover {
+  text-decoration: underline;
 }
 
 /* Buttons + Search */

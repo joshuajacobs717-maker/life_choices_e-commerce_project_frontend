@@ -1,6 +1,21 @@
 import { createStore } from "vuex"
 import api from "@/services/api.js"
 
+const SNAKE_APPLES_KEY = "snake_apples"
+const SNAKE_DISCOUNT_KEY = "snake_discount_unlocked"
+const REWARD_TARGET_APPLES = 50
+
+function readStoredApples() {
+  const value = Number(localStorage.getItem(SNAKE_APPLES_KEY))
+  if (Number.isNaN(value) || value < 0) return 0
+  return value
+}
+
+const initialSnakeApples = readStoredApples()
+const initialSnakeDiscount =
+  localStorage.getItem(SNAKE_DISCOUNT_KEY) === "true" ||
+  initialSnakeApples >= REWARD_TARGET_APPLES
+
 export default createStore({
   state: {
     user: null,
@@ -14,7 +29,9 @@ export default createStore({
 
   getters: {
     isAuthenticated: state => !!state.token,
-    userRole: state => state.user?.role
+    userRole: state => state.user?.role,
+    snakeApples: state => state.snakeApples,
+    snakeDiscountUnlocked: state => state.snakeDiscountUnlocked
   },
 
   mutations: {
