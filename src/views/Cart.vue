@@ -3,13 +3,13 @@ import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import api from "@/services/api.js";
 
-// Endpoints (match your backend mounts)
+// ✅ FIXED endpoints (match backend index.js mounts)
 const CART_URL = "/cart";
-const CART_ITEMS_URL = "/cartitems";
+const CART_ITEMS_URL = "/cart_items";
 const ORDERS_URL = "/orders";
-const ORDER_ITEMS_URL = "/orderitems";
+const ORDER_ITEMS_URL = "/order_items";
 
-// Snake discount (your project uses this localStorage key)
+// Snake discount
 const SNAKE_DISCOUNT_KEY = "snake_discount_unlocked";
 
 const store = useStore();
@@ -17,18 +17,23 @@ const store = useStore();
 const loading = ref(true);
 const error = ref("");
 
-const cart = ref(null); // { cart_id, user_id, ... } depending on backend
-const cartItems = ref([]); // [{ cart_item_id, item_id, quantity, ... }]
+const cart = ref(null);
+const cartItems = ref([]);
 
 const creatingOrder = ref(false);
 const actionError = ref("");
+
+// ✅ Checkout success modal
+const showSuccess = ref(false);
+const successMessage = ref("");
 
 // If you already load products/items elsewhere, we can enrich cart display from store.items
 const itemsCatalog = computed(() => store.state?.items || []);
 const user = computed(() => store.state?.user);
 
+// ✅ your UI now says 10% (if you changed snake reward)
 const discountUnlocked = computed(() => localStorage.getItem(SNAKE_DISCOUNT_KEY) === "true");
-const discountPercent = computed(() => (discountUnlocked.value ? 5 : 0));
+const discountPercent = computed(() => (discountUnlocked.value ? 10 : 0));
 
 function money(n) {
   const num = Number(n || 0);
@@ -50,7 +55,6 @@ function displayName(ci) {
 }
 
 function displayPrice(ci) {
-  // backend might return item_price/price, otherwise pull from catalog
   const p =
     ci.item_price ??
     ci.price ??
@@ -82,36 +86,29 @@ async function ensureUserLoaded() {
     try {
       await store.dispatch("fetchUser");
     } catch {
-      // ignore; page will show login message
+      // ignore
     }
   }
 }
 
 async function ensureCartExists() {
-  // Many backends create a cart per user. If yours expects a POST first, we do that.
-  // If GET already returns a cart, we use it.
-  try {
-    const res = await api.get(CART_URL);
-    // supports: {cart:{...}} or {...} or []
-    const data = res.data;
-    cart.value = data?.cart || (Array.isArray(data) ? data[0] : data) || null;
+  const res = await api.get(CART_URL);
+  const data = res.data;
+  cart.value = data?.cart || (Array.isArray(data) ? data[0] : data) || null;
 
-    // If no cart returned, create one (if your backend supports it)
-    if (!cart.value) {
-      const created = await api.post(CART_URL, { user_id: user.value?.user_id || user.value?.id });
-      const cd = created.data;
-      cart.value = cd?.cart || cd || null;
-    }
-  } catch (e) {
-    // If your GET /cart requires params and fails, you can adjust here.
-    throw e;
+  if (!cart.value) {
+    const created = await api.post(CART_URL, {
+      user_id: user.value?.user_id || user.value?.id,
+    });
+    const cd = created.data;
+    cart.value = cd?.cart || cd || null;
   }
 }
 
 async function fetchCartItems() {
   const res = await api.get(CART_ITEMS_URL);
-  // supports: {cartItems:[...]} or {items:[...]} or [...]
   const data = res.data;
+
   cartItems.value =
     (Array.isArray(data) ? data : data?.cartItems || data?.items || data?.cart_items || []) || [];
 }
@@ -125,7 +122,6 @@ async function loadCart() {
     await ensureUserLoaded();
 
     if (!user.value) {
-      // not logged in
       loading.value = false;
       return;
     }
@@ -143,11 +139,9 @@ async function loadCart() {
 async function updateQty(ci, nextQty) {
   actionError.value = "";
   const qty = Number(nextQty);
-
   if (!Number.isFinite(qty) || qty < 1) return;
 
   try {
-    // PATCH /cartitems/:cart_item_id
     await api.patch(`${CART_ITEMS_URL}/${ci.cart_item_id}`, { quantity: qty });
     ci.quantity = qty;
   } catch (e) {
@@ -170,7 +164,6 @@ async function removeItem(ci) {
 async function clearCart() {
   actionError.value = "";
   try {
-    // backend doesn’t have "clear" route, so delete one-by-one
     for (const ci of [...cartItems.value]) {
       // eslint-disable-next-line no-await-in-loop
       await api.delete(`${CART_ITEMS_URL}/${ci.cart_item_id}`);
@@ -182,8 +175,10 @@ async function clearCart() {
   }
 }
 
+// ✅ Simulated checkout (uses your backend order routes)
 async function checkout() {
   actionError.value = "";
+
   if (!user.value) {
     actionError.value = "Please log in to checkout.";
     return;
@@ -208,9 +203,7 @@ async function checkout() {
     const createdOrder = orderRes.data?.order || orderRes.data;
     const order_id = createdOrder?.order_id || createdOrder?.id;
 
-    if (!order_id) {
-      throw new Error("Order created but order_id not returned by backend.");
-    }
+    if (!order_id) throw new Error("Order created but order_id not returned by backend.");
 
     // 2) Create order items
     for (const ci of cartItems.value) {
@@ -227,11 +220,9 @@ async function checkout() {
     // 3) Clear cart
     await clearCart();
 
-    // Optional: mark discount as used (if you want one-time usage)
-    // localStorage.setItem(SNAKE_DISCOUNT_KEY, "false");
-
-    actionError.value = "";
-    alert("Order placed successfully!");
+    // ✅ Success popup
+    successMessage.value = `Checkout successful! Order #${order_id}`;
+    showSuccess.value = true;
   } catch (e) {
     console.error("checkout error:", e);
     actionError.value = e?.response?.data?.message || e?.message || "Checkout failed.";
@@ -240,13 +231,17 @@ async function checkout() {
   }
 }
 
+function closeSuccess() {
+  showSuccess.value = false;
+  successMessage.value = "";
+}
+
 onMounted(async () => {
-  // Optional: preload items so we can show names/prices if cart items only store item_id
   if (!store.state?.items?.length) {
     try {
       await store.dispatch("fetchItems");
     } catch {
-      // ignore; cart can still render with fallback text
+      // ignore
     }
   }
 
@@ -268,12 +263,8 @@ onMounted(async () => {
     </header>
 
     <div v-if="loading" class="state">Loading cart...</div>
-
     <div v-else-if="error" class="state error">{{ error }}</div>
-
-    <div v-else-if="!user" class="state">
-      You must be logged in to view your cart.
-    </div>
+    <div v-else-if="!user" class="state">You must be logged in to view your cart.</div>
 
     <section v-else class="layout">
       <div class="left">
@@ -293,9 +284,14 @@ onMounted(async () => {
               <p class="price">R {{ money(displayPrice(ci)) }}</p>
 
               <div class="qty">
-                <button class="qtybtn" @click="updateQty(ci, Number(ci.quantity) - 1)" :disabled="Number(ci.quantity) <= 1">
+                <button
+                  class="qtybtn"
+                  @click="updateQty(ci, Number(ci.quantity) - 1)"
+                  :disabled="Number(ci.quantity) <= 1"
+                >
                   −
                 </button>
+
                 <input
                   class="qtyinput"
                   type="number"
@@ -303,9 +299,8 @@ onMounted(async () => {
                   :value="ci.quantity"
                   @change="updateQty(ci, $event.target.value)"
                 />
-                <button class="qtybtn" @click="updateQty(ci, Number(ci.quantity) + 1)">
-                  +
-                </button>
+
+                <button class="qtybtn" @click="updateQty(ci, Number(ci.quantity) + 1)">+</button>
 
                 <button class="remove" @click="removeItem(ci)">Remove</button>
               </div>
@@ -351,6 +346,15 @@ onMounted(async () => {
         </div>
       </aside>
     </section>
+
+    <!-- ✅ Success modal -->
+    <div v-if="showSuccess" class="modal-backdrop" @click.self="closeSuccess">
+      <div class="modal">
+        <h2>Success</h2>
+        <p>{{ successMessage }}</p>
+        <button class="btn" @click="closeSuccess">OK</button>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -396,7 +400,10 @@ h1 {
   align-items: start;
 }
 
-.left { display: grid; gap: 14px; }
+.left {
+  display: grid;
+  gap: 14px;
+}
 
 .banner {
   padding: 12px 14px;
@@ -416,7 +423,10 @@ h1 {
   background: #fff;
 }
 
-.items { display: grid; gap: 12px; }
+.items {
+  display: grid;
+  gap: 12px;
+}
 
 .row {
   display: grid;
@@ -437,8 +447,14 @@ h1 {
   border: 1px solid #eee;
 }
 
-.name { margin: 0; font-size: 1.05rem; }
-.price { margin: 6px 0 0 0; color: #555; }
+.name {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.price {
+  margin: 6px 0 0 0;
+  color: #555;
+}
 
 .qty {
   margin-top: 10px;
@@ -508,9 +524,18 @@ h1 {
   color: #fff;
   cursor: pointer;
 }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn.ghost { background: #fff; color: #111; }
-.btn.danger { background: #b00020; border-color: #b00020; }
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn.ghost {
+  background: #fff;
+  color: #111;
+}
+.btn.danger {
+  background: #b00020;
+  border-color: #b00020;
+}
 
 .note {
   margin: 0;
@@ -523,10 +548,32 @@ code {
   border-radius: 6px;
 }
 
-@media (max-width: 980px) {
-  .layout { grid-template-columns: 1fr; }
-  .summary { position: static; }
-  .row { grid-template-columns: 90px 1fr; }
-  .lineTotal { grid-column: 1 / -1; justify-self: start; }
+/* ✅ Checkout success modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modal {
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 10px;
+}
+
+.modal h2 {
+  margin: 0;
+}
+.modal p {
+  margin: 0;
+  color: #444;
 }
 </style>

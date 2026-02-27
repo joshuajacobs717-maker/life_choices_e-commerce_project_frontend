@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import Cards from "@/components/CatergoryCards.vue";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import ProductModal from "@/components/ProductModal.vue";
 
 const activeCategory = ref("ALL");
@@ -10,6 +11,7 @@ const searchQuery = ref("");
 const REWARD_TARGET_APPLES = 50;
 
 const store = useStore();
+const router = useRouter();
 
 onMounted(() => {
   store.dispatch("fetchCategories");
@@ -23,7 +25,7 @@ const applesRemaining = computed(() =>
   Math.max(REWARD_TARGET_APPLES - (snakeApples.value || 0), 0)
 );
 
-// ✅ Admin-only button logic
+// Admin-only button logic
 const isAdmin = computed(() => {
   const roleFromState = store.state?.user?.role;
   const roleFromGetter = store.getters?.userRole;
@@ -52,6 +54,91 @@ function openEdit(product) {
   selectedProduct.value = product;
   showModal.value = true;
 }
+
+/* ---------------- CART INTEGRATION ----------------
+   Uses Vuex action if it exists, otherwise localStorage fallback
+--------------------------------------------------- */
+const toast = ref({
+  show: false,
+  text: "",
+});
+
+let toastTimer = null;
+
+function showToast(message) {
+  toast.value.show = true;
+  toast.value.text = message;
+
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.value.show = false;
+    toast.value.text = "";
+  }, 1400);
+}
+
+onBeforeUnmount(() => {
+  if (toastTimer) clearTimeout(toastTimer);
+});
+
+function normalizeProductForCart(p) {
+  // Tries to support common shapes from backend
+  const id = p?.product_id ?? p?.id ?? p?._id ?? p?.product_code ?? p?.code;
+  return {
+    id,
+    product_id: p?.product_id ?? p?.id ?? p?._id ?? null,
+    name: p?.name ?? p?.product_name ?? p?.title ?? "Product",
+    price: Number(p?.price ?? p?.product_price ?? p?.amount ?? 0),
+    image: p?.image ?? p?.imageUrl ?? p?.product_image ?? p?.img ?? "",
+    quantity: 1,
+    raw: p, // keep original just in case
+  };
+}
+
+function addToCartLocalStorage(product) {
+  const item = normalizeProductForCart(product);
+  const key = "cart_items";
+
+  const current = JSON.parse(localStorage.getItem(key) || "[]");
+  const idx = current.findIndex((x) => String(x.id) === String(item.id));
+
+  if (idx >= 0) {
+    current[idx].quantity = (Number(current[idx].quantity) || 1) + 1;
+  } else {
+    current.push(item);
+  }
+
+  localStorage.setItem(key, JSON.stringify(current));
+}
+
+async function addToCart(product) {
+  // Prefer Vuex if you have it
+  // Expected action names (one of these):
+  // - addToCart
+  // - cart/addToCart
+  // - addItemToCart
+  try {
+    if (store._actions?.addToCart) {
+      await store.dispatch("addToCart", product);
+    } else if (store._actions?.["cart/addToCart"]) {
+      await store.dispatch("cart/addToCart", product);
+    } else if (store._actions?.addItemToCart) {
+      await store.dispatch("addItemToCart", product);
+    } else {
+      // fallback
+      addToCartLocalStorage(product);
+    }
+
+    showToast("Added to cart ✅");
+  } catch (e) {
+    console.error("addToCart error:", e);
+    showToast("Could not add to cart ❌");
+  }
+}
+
+async function buyNow(product) {
+  await addToCart(product);
+  router.push("/cart");
+}
 </script>
 
 <template>
@@ -61,7 +148,7 @@ function openEdit(product) {
       <h1>Products</h1>
       <p>Pick Which Category Below</p>
 
-      <!-- ✅ Update snake text -->
+      <!--  Snake text -->
       <div class="snake-banner" :class="{ unlocked: snakeDiscountUnlocked }">
         <p v-if="snakeDiscountUnlocked">
           Snake reward unlocked: 10% off is active for any product at checkout.
@@ -98,18 +185,28 @@ function openEdit(product) {
       </div>
     </div>
 
-    <!-- ✅ Admin-only: Add product button -->
+    <!--  Admin-only: Add product button -->
     <div v-if="isAdmin" class="admin-actions">
       <button class="add-btn" @click="openCreate">
         + New Product
       </button>
     </div>
 
-    <ProductModal
-      :show="showModal"
-      :product="selectedProduct"
-      @close="showModal = false"
-    />
+    <!--  Modal ABOVE EVERYTHING + CENTERED -->
+    <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
+      <div class="modal-center">
+        <ProductModal
+          :show="showModal"
+          :product="selectedProduct"
+          @close="showModal = false"
+        />
+      </div>
+    </div>
+
+    <!--  Toast popup -->
+    <div v-if="toast.show" class="toast" role="status" aria-live="polite">
+      {{ toast.text }}
+    </div>
 
     <!-- Cards -->
     <div class="card-container">
@@ -117,6 +214,8 @@ function openEdit(product) {
         :category="activeCategory"
         :search="searchQuery"
         @edit="openEdit"
+        @add-to-cart="addToCart"
+        @buy-now="buyNow"
       />
     </div>
   </div>
@@ -200,7 +299,7 @@ function openEdit(product) {
   color: #e7e7e7;
 }
 
-/* ✅ Admin button positioning (top-right area of page content) */
+/*  Admin button positioning */
 .admin-actions {
   width: 100%;
   display: flex;
@@ -218,5 +317,37 @@ function openEdit(product) {
 }
 .add-btn:hover {
   background: #333;
+}
+
+/*  Modal overlay ABOVE EVERYTHING */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+/*  Center wrapper */
+.modal-center {
+  width: min(900px, 100%);
+  display: grid;
+  place-items: center;
+}
+
+/*  Added-to-cart toast */
+.toast {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  z-index: 10000;
+  background: #111;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 </style>

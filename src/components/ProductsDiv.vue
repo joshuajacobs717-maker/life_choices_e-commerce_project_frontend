@@ -1,6 +1,28 @@
 <script>
+import { computed, onMounted } from "vue"
+import { useStore } from "vuex"
+
 export default {
-  name: "Products"
+  name: "Products",
+  setup() {
+    const store = useStore()
+
+    onMounted(() => {
+      store.dispatch("fetchItems")
+    })
+
+    const products = computed(() => {
+      return store.state.items || []
+    })
+
+    const topFiveProducts = computed(() => {
+      return products.value.slice(0, 5)
+    })
+
+    return {
+      topFiveProducts
+    }
+  }
 }
 </script>
 
@@ -11,41 +33,32 @@ export default {
     <div class="section-header">
       <h2>Top Products</h2>
       <p class="see-more">
-        <router-link class="link" to="/products">See More <i class="fa-solid fa-angle-right"></i></router-link>
+        <router-link class="link" to="/products">
+          See More <i class="fa-solid fa-angle-right"></i>
+        </router-link>
       </p>
     </div>
 
     <!-- Cards Container -->
     <div class="shop-by-cat">
-      <div class="items">
-        <img src="https://via.placeholder.com/250x180">
-        <h4>placeholder</h4>
-        <p>Neque porro quisquam est qui dolorem ipsum </p>
+
+      <div
+        v-for="product in topFiveProducts"
+        :key="product.item_id"
+        class="items"
+      >
+        <img
+          :src="product.photo || 'http://localhost:5490/uploads/default.png'"
+          alt="product"
+        />
+        <h4>{{ product.name }}</h4>
+        <p>R {{ product.price }}</p>
       </div>
 
-      <div class="items">
-        <img src="https://via.placeholder.com/250x180">
-        <h4>placeholder</h4>
-        <p>Neque porro quisquam est qui dolorem ipsum </p>
-      </div>
+      <p v-if="topFiveProducts.length === 0">
+        No products available.
+      </p>
 
-      <div class="items">
-        <img src="https://via.placeholder.com/250x180">
-        <h4>placeholder</h4>
-        <p>Neque porro quisquam est qui dolorem ipsum </p>
-      </div>
-
-      <div class="items">
-        <img src="https://via.placeholder.com/250x180">
-        <h4>placeholder</h4>
-        <p>Neque porro quisquam est qui dolorem ipsum </p>
-      </div>
-
-      <div class="items">
-        <img src="https://via.placeholder.com/250x180">
-        <h4>placeholder</h4>
-        <p>Neque porro quisquam est qui dolorem ipsum </p>
-      </div>
     </div>
 
   </section>
@@ -60,13 +73,13 @@ export default {
 /* Top header area */
 .section-header {
   display: flex;
-  justify-content: space-between; /* <--- makes h2 left and see-more right */
-  align-items: center;           /* vertically center them */
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 30px;
 }
 
 .section-header h2 {
-  margin: 0; /* remove default margin */
+  margin: 0;
 }
 
 .see-more {
@@ -93,10 +106,13 @@ export default {
   padding: 20px;
   border-radius: 12px;
   transition: 0.3s ease;
+  background: white;
 }
 
 .items img {
   width: 100%;
+  height: 180px;
+  object-fit: cover;
   border-radius: 10px;
   margin-bottom: 15px;
 }
