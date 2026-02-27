@@ -4,24 +4,58 @@ import { useStore } from "vuex"
 import AddCategories from "@/components/AddCategories.vue"
 
 const store = useStore()
+
 onMounted(() => {
   store.dispatch("fetchCategories")
+  store.dispatch("fetchItems")
+  console.log("ITEMS FROM STORE:", store.state.items)
 })
 
 const sections = computed(() => store.state.categories.categories)
+const items = computed(() => store.state.items || [])
 
 const selectedCategory = ref(null)
-const addCategoryModalRef = ref(null) // ref to child component
+const addCategoryModalRef = ref(null)
 
 const openCreateModal = () => {
   selectedCategory.value = null
-  if (addCategoryModalRef.value) addCategoryModalRef.value.show()
+  addCategoryModalRef.value?.show()
 }
 
 const openEditModal = (category) => {
   selectedCategory.value = category
-  if (addCategoryModalRef.value) addCategoryModalRef.value.show()
+  addCategoryModalRef.value?.show()
 }
+
+/* 🔹 track slide index per category */
+const slideIndexes = ref({})
+
+function getCategoryProducts(categoryId) {
+  return items.value.filter(i => i.category_id === categoryId)
+}
+
+function getCurrentImage(categoryId) {
+  const products = getCategoryProducts(categoryId)
+
+  if (!products.length) return null
+
+  const index = slideIndexes.value[categoryId] || 0
+  return products[index]?.photo
+}
+// console.log(getCurrentImage(category_id))
+
+/* 🔹 Auto sliding */
+setInterval(() => {
+  sections.value.forEach(section => {
+    const products = getCategoryProducts(section.category_id)
+
+    if (!products.length) return
+
+    const current = slideIndexes.value[section.category_id] || 0
+    slideIndexes.value[section.category_id] =
+      (current + 1) % products.length
+  })
+}, 2500)
 </script>
 
 <template>
@@ -47,11 +81,11 @@ const openEditModal = (category) => {
           <div
             class="category-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
           >
-            <img
-              :src="section.image || 'https://via.placeholder.com/200'"
-              :alt="section.name"
-              class="img-fluid category-image"
-            />
+<img
+  :src="getCurrentImage(section.category_id) || 'https://via.placeholder.com/200'"
+  :alt="section.name"
+  class="img-fluid category-image"
+/>
           </div>
 
           <h6 class="fw-semibold text-dark">{{ section.name }}</h6>
@@ -107,9 +141,10 @@ const openEditModal = (category) => {
 }
 
 .category-image {
-  max-width: 70%;
-  max-height: 70%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  transition: opacity 0.4s ease;
 }
 .bi {
   font-size: 1.2rem;

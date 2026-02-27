@@ -283,16 +283,18 @@ export default createStore({
 
     
 
-    async fetchItems({ commit }) {
-      try {
-        const response = await api.get("/items")
+async fetchItems({ commit }) {
+  try {
+    const response = await api.get("/items")
 
-        commit("SET_ITEMS", response.data.items)
+    console.log("FULL RESPONSE:", response.data)
 
-      } catch (error) {
-        throw error.response?.data?.message || "Failed To Fetch Items"
-      }
-    },
+    commit("SET_ITEMS", response.data.items)
+
+  } catch (error) {
+    throw error.response?.data?.message || "Failed To Fetch Items"
+  }
+},
     async createItem({ commit }, itemData) {
       try {
         const response = await api.post("/items", itemData)

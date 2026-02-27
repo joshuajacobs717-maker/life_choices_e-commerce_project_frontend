@@ -93,34 +93,44 @@ const hasCoords = computed(() => !!getLatLng(props.company));
 <style scoped>
 .brand {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 30px;
+  flex-direction: column;
+
+  height: 100%;
+  min-height: 340px;
 
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 
-  transition: 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+  transition: all 0.25s ease;
 }
 
 .brand:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.12);
 }
 
 .brand-left {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 250px;
+  text-align: center;
 }
 
 .brand-left img {
   width: 100%;
+  height: 180px;
+  object-fit: cover;
+
   border-radius: 10px;
   margin-bottom: 10px;
-  object-fit: cover;
+}
+
+.brand-left h4 {
+  margin: 5px 0 10px 0;
+  font-weight: 600;
 }
 
 .brand-right {
@@ -171,17 +181,42 @@ button:disabled {
     align-self: center;
   }
 }
-.actions{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 
-.edit{
-background:#1976d2;
+.actions button {
+  flex: 1;
+  padding: 10px;
+
+  border-radius: 8px;
+  border: none;
+
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.25s;
 }
 
-.delete{
-background:#c62828;
+.actions button:hover {
+  transform: translateY(-2px);
+}
+
+.actions button:first-child {
+  background: #121212;
+  color: white;
+}
+
+.edit {
+  background: #1976d2;
+  color: white;
+}
+
+.delete {
+  background: #c62828;
+  color: white;
 }
 </style>
