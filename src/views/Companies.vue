@@ -2,11 +2,13 @@
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import CompanyCard from "../components/CompanyCard.vue";
+import CompanyForm from "../components/CompanyForm.vue";
 import api from "@/services/api.js";
 
 const store = useStore();
 
 const companies = ref([]);
+const editingCompany = ref(null);
 const loading = ref(true);
 const error = ref("");
 
@@ -14,13 +16,13 @@ const showModal = ref(false);
 const saving = ref(false);
 const formError = ref("");
 
-const form = ref({
-  name: "",
-  logo: "",
-  description: "",
-  latitude: "",
-  longitude: "",
-});
+// const form = ref({
+//   name: "",
+//   logo: "",
+//   description: "",
+//   latitude: "",
+//   longitude: "",
+// });
 
 // ✅ token might be in localStorage even when store is empty after refresh
 const token = computed(() => store.state?.token || localStorage.getItem("token") || "");
@@ -67,15 +69,8 @@ async function fetchCompanies() {
 }
 
 function openModal() {
-  formError.value = "";
-  form.value = {
-    name: "",
-    logo: "",
-    description: "",
-    latitude: "",
-    longitude: "",
-  };
-  showModal.value = true;
+  editingCompany.value = null
+  showModal.value = true
 }
 
 function closeModal() {
@@ -87,42 +82,62 @@ function toNumberOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-async function submitCompany() {
-  formError.value = "";
+function editCompany(company){
+editingCompany.value = company
+showModal.value = true
+}
 
-  const payload = {
-    name: form.value.name.trim(),
-    logo: form.value.logo.trim(),
-    description: form.value.description.trim(),
-    latitude: toNumberOrNull(form.value.latitude),
-    longitude: toNumberOrNull(form.value.longitude),
-  };
+async function deleteCompany(company){
 
-  if (!payload.name) {
-    formError.value = "Company name is required.";
-    return;
-  }
-  if (payload.latitude === null || payload.longitude === null) {
-    formError.value = "Latitude and Longitude must be valid numbers.";
-    return;
-  }
+if(!confirm("Delete this company?")) return
 
-  try {
-    saving.value = true;
+try{
 
-    const res = await api.post("/companies", payload);
-    companies.value = normalizeCompanies(res.data);
+await api.delete(`/companies/${company.id || company.company_id}`)
 
-    showModal.value = false;
-  } catch (e) {
-    console.error("submitCompany error:", e);
-    formError.value =
-      e?.response?.data?.message ||
-      e?.message ||
-      "Failed to create company (are you logged in as admin?).";
-  } finally {
-    saving.value = false;
-  }
+fetchCompanies()
+
+}catch(e){
+
+console.error(e)
+
+}
+
+}
+
+async function submitCompany(data){
+
+try{
+
+saving.value = true
+
+if(editingCompany.value){
+
+await api.put(`/companies/${editingCompany.value.id || editingCompany.value.company_id}`,data)
+
+}else{
+
+await api.post("/companies",data)
+
+}
+
+await fetchCompanies()
+
+showModal.value = false
+editingCompany.value = null
+
+}catch(e){
+
+console.error(e)
+formError.value="Failed saving company"
+
+}
+finally{
+
+saving.value=false
+
+}
+
 }
 
 onMounted(async () => {
@@ -162,65 +177,34 @@ onMounted(async () => {
       </div>
 
       <template v-else>
-        <CompanyCard
-          v-for="company in companies"
-          :key="company.company_id || company.id || company._id || company.name"
-          :company="company"
-        />
+<CompanyCard
+v-for="company in companies"
+:key="company.company_id || company.id || company._id || company.name"
+:company="company"
+@edit="editCompany"
+@delete="deleteCompany"
+/>
       </template>
     </div>
 
     <!-- Modal -->
     <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
-      <div class="modal">
-        <div class="modal-head">
-          <h2>Add New Company</h2>
-          <button class="x" @click="closeModal" aria-label="Close">✕</button>
-        </div>
+<div class="modal">
+  <div class="modal-head">
+    <h2>
+      {{ editingCompany ? "Edit Company" : "Add New Company" }}
+    </h2>
 
-        <form class="modal-body" @submit.prevent="submitCompany">
-          <label>
-            Name
-            <input v-model="form.name" type="text" placeholder="Company name" />
-          </label>
+    <button class="x" @click="closeModal">✕</button>
+  </div>
 
-          <label>
-            Logo URL
-            <input v-model="form.logo" type="text" placeholder="https://..." />
-          </label>
-
-          <label>
-            Description
-            <textarea
-              v-model="form.description"
-              rows="3"
-              placeholder="Short description..."
-            />
-          </label>
-
-          <div class="row">
-            <label>
-              Latitude
-              <input v-model="form.latitude" type="text" placeholder="-29.8587" />
-            </label>
-            <label>
-              Longitude
-              <input v-model="form.longitude" type="text" placeholder="31.0218" />
-            </label>
-          </div>
-
-          <p v-if="formError" class="form-error">{{ formError }}</p>
-
-          <div class="modal-actions">
-            <button type="button" class="btn ghost" @click="closeModal">
-              Cancel
-            </button>
-            <button type="submit" class="btn" :disabled="saving">
-              {{ saving ? "Saving..." : "Create" }}
-            </button>
-          </div>
-        </form>
-      </div>
+  <CompanyForm
+    :company="editingCompany"
+    :saving="saving"
+    @submit="submitCompany"
+    @cancel="closeModal"
+  />
+</div>
     </div>
   </div>
 </template>
@@ -271,9 +255,8 @@ onMounted(async () => {
 .cards-container {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  align-content: start;
 }
 
 .state {
