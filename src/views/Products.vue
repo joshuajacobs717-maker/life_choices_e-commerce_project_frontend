@@ -2,47 +2,55 @@
 import { computed, ref, onMounted } from "vue";
 import Cards from "@/components/CatergoryCards.vue";
 import { useStore } from "vuex";
-import ProductModal from "@/components/ProductModal.vue"
-// Track the currently active category
+import ProductModal from "@/components/ProductModal.vue";
+
 const activeCategory = ref("ALL");
-const searchQuery = ref("")
+const searchQuery = ref("");
+
 const REWARD_TARGET_APPLES = 50;
+
 const store = useStore();
+
 onMounted(() => {
-  store.dispatch("fetchCategories")
-  store.dispatch("fetchItems")
-})
+  store.dispatch("fetchCategories");
+  store.dispatch("fetchItems");
+});
+
 const snakeApples = computed(() => store.getters.snakeApples);
 const snakeDiscountUnlocked = computed(() => store.getters.snakeDiscountUnlocked);
+
 const applesRemaining = computed(() =>
-  Math.max(REWARD_TARGET_APPLES - snakeApples.value, 0),
+  Math.max(REWARD_TARGET_APPLES - (snakeApples.value || 0), 0)
 );
 
-// List of categories
+// ✅ Admin-only button logic
+const isAdmin = computed(() => {
+  const roleFromState = store.state?.user?.role;
+  const roleFromGetter = store.getters?.userRole;
+
+  const role = String(roleFromState || roleFromGetter || "").toLowerCase();
+  return role === "admin";
+});
+
 const categories = computed(() => {
-  return [
-    { category_id: "ALL", name: "All" },
-    ...(store.state.categories.categories || [])
-  ]
-})
-console.log(categories);
+  return [{ category_id: "ALL", name: "All" }, ...(store.state.categories.categories || [])];
+});
 
-
-// Function to select a category
 function selectCategory(categoryId) {
-  activeCategory.value = categoryId
+  activeCategory.value = categoryId;
 }
-const showModal = ref(false)
-const selectedProduct = ref(null)
+
+const showModal = ref(false);
+const selectedProduct = ref(null);
 
 function openCreate() {
-  selectedProduct.value = null
-  showModal.value = true
+  selectedProduct.value = null;
+  showModal.value = true;
 }
 
 function openEdit(product) {
-  selectedProduct.value = product
-  showModal.value = true
+  selectedProduct.value = product;
+  showModal.value = true;
 }
 </script>
 
@@ -52,77 +60,69 @@ function openEdit(product) {
     <div class="title">
       <h1>Products</h1>
       <p>Pick Which Category Below</p>
+
+      <!-- ✅ Update snake text -->
       <div class="snake-banner" :class="{ unlocked: snakeDiscountUnlocked }">
         <p v-if="snakeDiscountUnlocked">
-          Snake reward unlocked: 5% off is active for any product at checkout.
+          Snake reward unlocked: 10% off is active for any product at checkout.
         </p>
         <p v-else>
-          Eat {{ applesRemaining }} more apples in the Snake Challenge to unlock 5%
-          off any product.
+          Eat 50 apples to get 10% discount.
+          <span v-if="applesRemaining > 0"> ({{ applesRemaining }} apples remaining)</span>
         </p>
+
         <router-link class="snake-link" to="/challenges">Play challenge</router-link>
       </div>
     </div>
 
     <!-- Buttons + Search -->
     <div class="actions">
-<div class="category-btn-div">
-  <button
-    v-for="category in categories"
-    :key="category.category_id"
-    :class="{ active: activeCategory === category.category_id }"
-    @click="selectCategory(category.category_id)"
-  >
-    {{ category.name }}
-  </button>
-</div>
+      <div class="category-btn-div">
+        <button
+          v-for="category in categories"
+          :key="category.category_id"
+          :class="{ active: activeCategory === category.category_id }"
+          @click="selectCategory(category.category_id)"
+        >
+          {{ category.name }}
+        </button>
+      </div>
 
-<div class="search">
-  <div class="search-wrapper">
-    <input
-      type="search"
-      v-model="searchQuery"
-      placeholder="Search products..."
-    />
-    <button class="search-btn">
-      <i class="fa-solid fa-magnifying-glass"></i>
-    </button>
-  </div>
-</div>
+      <div class="search">
+        <div class="search-wrapper">
+          <input type="search" v-model="searchQuery" placeholder="Search products..." />
+          <button class="search-btn">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+      </div>
     </div>
-    <div style="width:100%; text-align:center; margin-top:20px;">
-  <button class="add-btn" @click="openCreate">
-    + New Product
-  </button>
-</div>
-<ProductModal
-  :show="showModal"
-  :product="selectedProduct"
-  @close="showModal = false"
-/>
+
+    <!-- ✅ Admin-only: Add product button -->
+    <div v-if="isAdmin" class="admin-actions">
+      <button class="add-btn" @click="openCreate">
+        + New Product
+      </button>
+    </div>
+
+    <ProductModal
+      :show="showModal"
+      :product="selectedProduct"
+      @close="showModal = false"
+    />
+
     <!-- Cards -->
     <div class="card-container">
       <Cards
-  :category="activeCategory"
-  :search="searchQuery"
-  @edit="openEdit"
-/>
+        :category="activeCategory"
+        :search="searchQuery"
+        @edit="openEdit"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
-.add-btn {
-  padding:10px 20px;
-  border:none;
-  border-radius:8px;
-  background:black;
-  color:white;
-  cursor:pointer;
-}
-.add-btn:hover {
-  background:#333;
-}
 .category-page {
   padding: 20px 40px;
   display: flex;
@@ -141,6 +141,8 @@ function openEdit(product) {
   font-size: 1rem;
   color: #555;
 }
+
+/* Snake banner */
 .snake-banner {
   margin-top: 12px;
   padding: 12px;
@@ -185,7 +187,6 @@ function openEdit(product) {
   display: flex;
   gap: 5px;
 }
-
 .category-btn-div button {
   padding: 5px 15px;
   border-radius: 8px;
@@ -194,52 +195,28 @@ function openEdit(product) {
   cursor: pointer;
   transition: 0.2s;
 }
-
 .category-btn-div button:hover {
   background-color: #040404;
   color: #e7e7e7;
 }
 
-/* Highlight active button */
-.category-btn-div button.active {
-  background-color: #040404;
-  color: #e7e7e7;
-  font-weight: bold;
-}
-
-/* Search */
-.search-wrapper {
-  position: relative;
-  width: 250px; /* adjust width if needed */
-}
-
-.search-wrapper input {
+/* ✅ Admin button positioning (top-right area of page content) */
+.admin-actions {
   width: 100%;
-  padding: 8px 40px 8px 12px; /* padding-right for button space */
-  border-radius: 25px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
-.search-wrapper .search-btn {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
+.add-btn {
+  padding: 10px 20px;
   border: none;
-  background-color: #040404;
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 20px;
+  border-radius: 8px;
+  background: black;
+  color: white;
   cursor: pointer;
 }
-
-.search-wrapper .search-btn:hover {
-  background-color: #333;
-}
-
-/* Cards */
-.card-container {
-  margin-top: 20px;
+.add-btn:hover {
+  background: #333;
 }
 </style>
