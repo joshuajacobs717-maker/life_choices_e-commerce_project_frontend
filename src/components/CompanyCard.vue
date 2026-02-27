@@ -8,7 +8,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["view-on-map"]);
+const emit = defineEmits(["view-on-map","edit","delete"]);
 
 function getLatLng(company) {
   const lat =
@@ -73,10 +73,19 @@ const hasCoords = computed(() => !!getLatLng(props.company));
 
     <div class="brand-right">
       <p>{{ descriptionText }}</p>
+<div class="actions">
+  <button @click="openInGoogleMaps" :disabled="!hasCoords">
+    {{ hasCoords ? "View On Map" : "No Location" }}
+  </button>
 
-      <button :disabled="!hasCoords" @click="openInGoogleMaps">
-        {{ hasCoords ? "View On Map" : "No Location" }}
-      </button>
+  <button class="edit" @click="$emit('edit', company)">
+    Edit
+  </button>
+
+  <button class="delete" @click="$emit('delete', company)">
+    Delete
+  </button>
+</div>
     </div>
   </div>
 </template>
@@ -161,5 +170,18 @@ button:disabled {
   button {
     align-self: center;
   }
+}
+.actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.edit{
+background:#1976d2;
+}
+
+.delete{
+background:#c62828;
 }
 </style>
