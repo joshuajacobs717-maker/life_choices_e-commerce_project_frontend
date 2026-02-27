@@ -1,13 +1,17 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import Cards from "@/components/CatergoryCards.vue";
 import { useStore } from "vuex";
-
+import ProductModal from "@/components/ProductModal.vue"
 // Track the currently active category
-const activeCategory = ref("All");
+const activeCategory = ref("ALL");
+const searchQuery = ref("")
 const REWARD_TARGET_APPLES = 50;
 const store = useStore();
-
+onMounted(() => {
+  store.dispatch("fetchCategories")
+  store.dispatch("fetchItems")
+})
 const snakeApples = computed(() => store.getters.snakeApples);
 const snakeDiscountUnlocked = computed(() => store.getters.snakeDiscountUnlocked);
 const applesRemaining = computed(() =>
@@ -15,11 +19,30 @@ const applesRemaining = computed(() =>
 );
 
 // List of categories
-const categories = ["All", "Equipment", "Appliances", "Clothing"];
+const categories = computed(() => {
+  return [
+    { category_id: "ALL", name: "All" },
+    ...(store.state.categories.categories || [])
+  ]
+})
+console.log(categories);
+
 
 // Function to select a category
-function selectCategory(category) {
-  activeCategory.value = category;
+function selectCategory(categoryId) {
+  activeCategory.value = categoryId
+}
+const showModal = ref(false)
+const selectedProduct = ref(null)
+
+function openCreate() {
+  selectedProduct.value = null
+  showModal.value = true
+}
+
+function openEdit(product) {
+  selectedProduct.value = product
+  showModal.value = true
 }
 </script>
 
@@ -43,41 +66,63 @@ function selectCategory(category) {
 
     <!-- Buttons + Search -->
     <div class="actions">
-      <div class="category-btn-div">
-        <button
-          v-for="category in categories"
-          :key="category"
-          :class="{ active: activeCategory === category }"
-          @click="selectCategory(category)"
-        >
-          {{ category }}
-        </button>
-      </div>
+<div class="category-btn-div">
+  <button
+    v-for="category in categories"
+    :key="category.category_id"
+    :class="{ active: activeCategory === category.category_id }"
+    @click="selectCategory(category.category_id)"
+  >
+    {{ category.name }}
+  </button>
+</div>
 
-      <div class="search">
-        <form action="/search_results.html" method="get">
-          <div class="search-wrapper">
-            <input
-              type="search"
-              id="site-search"
-              placeholder="Search products..."
-            />
-            <button type="submit" class="search-btn">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </div>
-        </form>
-      </div>
+<div class="search">
+  <div class="search-wrapper">
+    <input
+      type="search"
+      v-model="searchQuery"
+      placeholder="Search products..."
+    />
+    <button class="search-btn">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+  </div>
+</div>
     </div>
-
+    <div style="width:100%; text-align:center; margin-top:20px;">
+  <button class="add-btn" @click="openCreate">
+    + New Product
+  </button>
+</div>
+<ProductModal
+  :show="showModal"
+  :product="selectedProduct"
+  @close="showModal = false"
+/>
     <!-- Cards -->
     <div class="card-container">
-      <Cards :category="activeCategory" />
+      <Cards
+  :category="activeCategory"
+  :search="searchQuery"
+  @edit="openEdit"
+/>
     </div>
   </div>
 </template>
 
 <style scoped>
+.add-btn {
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+  background:black;
+  color:white;
+  cursor:pointer;
+}
+.add-btn:hover {
+  background:#333;
+}
 .category-page {
   padding: 20px 40px;
   display: flex;

@@ -287,7 +287,7 @@ export default createStore({
       try {
         const response = await api.get("/items")
 
-        commit("SET_ITEMS", response.data)
+        commit("SET_ITEMS", response.data.items)
 
       } catch (error) {
         throw error.response?.data?.message || "Failed To Fetch Items"
