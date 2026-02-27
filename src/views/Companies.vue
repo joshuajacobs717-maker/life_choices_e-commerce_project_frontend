@@ -177,13 +177,16 @@ onMounted(async () => {
       </div>
 
       <template v-else>
-<CompanyCard
-v-for="company in companies"
-:key="company.company_id || company.id || company._id || company.name"
-:company="company"
-@edit="editCompany"
-@delete="deleteCompany"
-/>
+<div class="companies-grid">
+  <CompanyCard
+    v-for="company in companies"
+    :key="company.company_id || company.id || company._id || company.name"
+    :company="company"
+    @edit="editCompany"
+    @delete="deleteCompany"
+    @view-on-map="viewOnMap"
+  />
+</div>
       </template>
     </div>
 
@@ -236,7 +239,12 @@ v-for="company in companies"
   margin: 8px 0 0 0;
   color: #555;
 }
-
+.companies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+  padding: 40px;
+}
 .admin-btn {
   padding: 10px 14px;
   border-radius: 12px;
