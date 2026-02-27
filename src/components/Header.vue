@@ -64,8 +64,7 @@ onUnmounted(() => {
     <!-- LEFT -->
     <div class="logo-container">
       <a 
-        href="https://youtu.be/pvbU_Ouj2Wc"
-        target="_blank"
+        href="/home"
         rel="noopener noreferrer"
         class="logo-link"
       >

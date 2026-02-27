@@ -10,15 +10,12 @@ const router = useRouter();
 
 const activeMode = ref("login");
 
-// ✅ login has optional role (frontend-only for redirect), defaults to Customer
 const loginForm = ref({
   email: "",
   password: "",
-  role: "", // optional (Admin / Customer)
   remember: false,
 });
 
-// ✅ register includes phone number + role (DB allows ONLY Admin/Customer)
 const registerForm = ref({
   name: "",
   surname: "",
@@ -26,7 +23,6 @@ const registerForm = ref({
   phone_number: "",
   password: "",
   confirmPassword: "",
-  role: "Customer", // ✅ default matches DB enum
   agree: false,
 });
 
@@ -43,20 +39,7 @@ function normalizeRole(role) {
   return String(role || "").trim().toLowerCase();
 }
 
-// ✅ Convert user input -> EXACT enum values your DB supports
-function toDbRole(inputRole, fallback = "Customer") {
-  const r = String(inputRole || "").trim().toLowerCase();
-
-  if (r === "admin") return "Admin";
-  if (r === "customer") return "Customer";
-
-  // common mistakes -> map to Customer
-  if (r === "client" || r === "user" || r === "cust") return "Customer";
-
-  return fallback; // default Customer
-}
-
-// ✅ Login
+// Login
 async function submitLogin() {
   try {
     const user = await store.dispatch("login", {
@@ -64,20 +47,14 @@ async function submitLogin() {
       password: loginForm.value.password,
     });
 
-    // use backend role first, else user typed role, else Customer
-    const backendRole = normalizeRole(user?.role);
-    const chosenRole = normalizeRole(loginForm.value.role);
-
-    const finalRole =
-      backendRole || normalizeRole(toDbRole(chosenRole, "Customer"));
-
-    router.push(finalRole === "admin" ? "/admin" : "/home");
+    const role = normalizeRole(user?.role);
+    router.push(role === "admin" ? "/admin" : "/home");
   } catch (error) {
     alert(error?.response?.data?.message || error?.message || error);
   }
 }
 
-// ✅ Register -> Save to DB -> auto login -> redirect
+// Register -> Save to DB -> auto login -> redirect
 async function submitRegister() {
   try {
     if (registerForm.value.password !== registerForm.value.confirmPassword) {
@@ -94,8 +71,8 @@ async function submitRegister() {
       last_name: registerForm.value.surname.trim(),
       email: registerForm.value.email.trim(),
       phone_number: registerForm.value.phone_number.trim(),
-      role: toDbRole(registerForm.value.role, "Customer"), // ✅ Admin/Customer only
       password: registerForm.value.password,
+      // role removed (backend should default to Customer)
     };
 
     await api.post("/users/register", payload);
@@ -105,7 +82,7 @@ async function submitRegister() {
       password: payload.password,
     });
 
-    const role = normalizeRole(user?.role || payload.role);
+    const role = normalizeRole(user?.role);
     router.push(role === "admin" ? "/admin" : "/home");
   } catch (error) {
     const msg =
@@ -129,6 +106,7 @@ function signInWithGoogle() {
 }
 
 onMounted(async () => {
+  // If user is already logged in but user object not fetched yet
   if (store.state?.token && !store.state?.user) {
     try {
       await store.dispatch("fetchUser");
@@ -137,6 +115,7 @@ onMounted(async () => {
     }
   }
 
+  // If already logged in, redirect based on backend role
   if (store.state?.user?.role) {
     const role = normalizeRole(store.state.user.role);
     router.replace(role === "admin" ? "/admin" : "/home");
@@ -193,17 +172,6 @@ watch(
         <div class="field">
           <label for="login-password">Password</label>
           <input id="login-password" v-model="loginForm.password" type="password" required />
-        </div>
-
-        <!-- ✅ optional role -->
-        <div class="field">
-          <label for="login-role">Role (optional)</label>
-          <input
-            id="login-role"
-            v-model="loginForm.role"
-            type="text"
-            placeholder="Customer"
-          />
         </div>
 
         <div class="row">
@@ -268,17 +236,6 @@ watch(
             v-model="registerForm.confirmPassword"
             type="password"
             required
-          />
-        </div>
-
-        <!-- ✅ role limited to Admin/Customer by mapping -->
-        <div class="field">
-          <label for="register-role">Role</label>
-          <input
-            id="register-role"
-            v-model="registerForm.role"
-            type="text"
-            placeholder="Customer"
           />
         </div>
 

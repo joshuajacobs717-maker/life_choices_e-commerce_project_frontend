@@ -6,7 +6,7 @@ export default {
 
 <template>
   <div class="hero-image">
-    <div class="wave-background"></div>
+    <!-- <div class="wave-background"></div> -->
     <div class="hero-text">
       <h1>See it, Want it, Get it</h1>
       <p>The thrill is in the click.</p>
@@ -29,7 +29,7 @@ export default {
 }
 
 /* Animated light grey waveform */
-.wave-background {
+/* .wave-background {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -42,17 +42,17 @@ export default {
   );
   animation: waveMove 3s linear infinite;
   opacity: 0.3; /* subtle */
-}
+/* }  */
 
 /* Wave animation */
-@keyframes waveMove {
+/* @keyframes waveMove {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-50%);
   }
-}
+} */
 
 /* Center the hero text */
 .hero-text {

@@ -7,7 +7,7 @@ import Socials from '../components/Socials.vue';
     
     <!-- HERO -->
     <section class="story-hero">
-      <div class="wave-background"></div>
+      <!-- <div class="wave-background"></div> -->
 
       <div class="hero-content">
         <h3>Who We Are</h3>
@@ -72,8 +72,8 @@ import Socials from '../components/Socials.vue';
   z-index: 0; /* create stacking context */
 }
 
-/* WAVE BACKGROUND — NOW ACTUALLY BEHIND */
-.wave-background {
+/* WAVE BACKGROUND
+/* .wave-background {
   position: absolute;
   inset: 0;
   width: 200%;
@@ -90,7 +90,7 @@ import Socials from '../components/Socials.vue';
 @keyframes waveMove {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
-}
+} */
 
 /* HERO CONTENT */
 .hero-content {

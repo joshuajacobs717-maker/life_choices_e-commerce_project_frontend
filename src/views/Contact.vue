@@ -26,7 +26,7 @@ function submitContact() {
 <template>
   <main class="contact-page">
     <section class="contact-hero">
-      <div class="wave-background" aria-hidden="true"></div>
+      <!-- <div class="wave-background" aria-hidden="true"></div> -->
       <div class="hero-content">
         <h1>Contact Us</h1>
         <p>
@@ -105,7 +105,7 @@ function submitContact() {
   background: #ffffff;
 }
 
-.wave-background {
+/* .wave-background {
   position: absolute;
   inset: 0;
   width: 200%;
@@ -121,7 +121,7 @@ function submitContact() {
   100% {
     transform: translateX(-50%);
   }
-}
+} */
 
 .hero-content {
   max-width: 760px;
