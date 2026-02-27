@@ -1,16 +1,40 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 
 const isVisible = ref(true)
 const router = useRouter()
+const store = useStore()
+
 let lastScrollY = window.scrollY
+
+// ✅ Check if user is logged in
+const isLoggedIn = computed(() => {
+  return !!store.state.token && !!store.state.user
+})
 
 function goToAuth(mode) {
   router.push({
     path: '/auth',
     query: { mode },
   })
+}
+
+// ✅ Logout function
+async function logout() {
+  try {
+    await store.dispatch('logout') // must exist in Vuex
+  } catch (e) {
+    console.warn('Logout fallback triggered')
+  }
+
+  // Fallback if no Vuex logout action exists
+  store.commit('SET_TOKEN', null)
+  store.commit('SET_USER', null)
+  localStorage.removeItem('token')
+
+  router.push('/home')
 }
 
 function handleScroll() {
@@ -35,10 +59,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header
-    class="nav-container"
-    :class="{ hidden: !isVisible }"
-  >
+  <header class="nav-container" :class="{ hidden: !isVisible }">
 
     <!-- LEFT -->
     <div class="logo-container">
@@ -70,7 +91,15 @@ onUnmounted(() => {
         </div>
       </router-link>
 
-      <div class="login-options">
+      <!-- ✅ IF LOGGED IN -->
+      <div v-if="isLoggedIn" class="login-options">
+        <button class="logout-btn" @click="logout">
+          Logout
+        </button>
+      </div>
+
+      <!-- ✅ IF NOT LOGGED IN -->
+      <div v-else class="login-options">
         <button class="login-btn" @click="goToAuth('login')">
           Login
         </button>
@@ -78,6 +107,7 @@ onUnmounted(() => {
           Sign Up
         </button>
       </div>
+
     </div>
 
   </header>
@@ -85,33 +115,44 @@ onUnmounted(() => {
 
 <style scoped>
 
-/* MAIN NAVBAR */
+/* Add logout button style */
+.logout-btn {
+  background: #b00020;
+  border: none;
+  color: #fff;
+  border-radius: 5px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #040404;
+  color: #E7E7E7;
+}
+
+/* (your existing styles remain unchanged below) */
+
 .nav-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 70px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   padding: 0 20px;
-
   background-color: transparent;
   color: #040404;
   z-index: 1000;
-
   transition: top 0.3s ease;
 }
 
-/* Hide on scroll */
 .nav-container.hidden {
   top: -80px;
 }
 
-/* LOGO */
 .logo-link {
   text-decoration: none;
   color: inherit;
@@ -130,7 +171,6 @@ onUnmounted(() => {
   opacity: 0.8;
 }
 
-/* CENTER MENU */
 .menu-container {
   display: flex;
   gap: 10px;
@@ -143,7 +183,6 @@ onUnmounted(() => {
   border-radius: 10px;
   padding: 6px 12px;
   width: 120px;
-
   font-size: 16px;
   cursor: pointer;
   transition: 0.2s ease;
@@ -162,7 +201,6 @@ onUnmounted(() => {
   color: #E7E7E7;
 }
 
-/* RIGHT SECTION */
 .right-section {
   display: flex;
   align-items: center;
@@ -170,25 +208,27 @@ onUnmounted(() => {
 }
 
 .cart {
-    font-size: 20px;
-    cursor: pointer;
-    color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
 }
+
 .cart-link {
-    background: #040404;
-    color: #E7E7E7;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
+  background: #040404;
+  color: #E7E7E7;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
+
 .cart-link:hover {
-    background-color: #E7E7E7;
-    color: #040404;
+  background-color: #E7E7E7;
+  color: #040404;
 }
 
 .login-options {
@@ -198,10 +238,10 @@ onUnmounted(() => {
 
 .login-btn,
 .signup-btn {
-    background: #040404;
-    border: none;
-    color: #E7E7E7;
-    border-radius: 5px;
+  background: #040404;
+  border: none;
+  color: #E7E7E7;
+  border-radius: 5px;
   padding: 8px 14px;
   cursor: pointer;
   transition: 0.2s ease;
