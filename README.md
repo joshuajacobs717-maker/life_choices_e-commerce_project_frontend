@@ -8,6 +8,7 @@ This repository contains both the frontend and backend for the Life Choices e-co
 
 - `life_choices_e-commerce_project_frontend/` - Vue 3 + Vite client app
 - `life_choices_e-commerce_project_backend/` - Express + MySQL API
+- Link to backend repo: https://github.com/SizaMpafa/life_choices_e-commerce_project_backend.git
 
 ## Prerequisites
 
