@@ -62,6 +62,7 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
   color: #111; /* dark text for light background */
+  width: min(92vw, 760px);
 }
 
 .hero-text h1 {
@@ -109,6 +110,40 @@ export default {
 .btn-link:hover {
   background-color: #e7e7e7;
   color: #040404;
+}
+
+.options-btn {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .hero-image {
+    height: 52vh;
+    min-height: 360px;
+  }
+
+  .hero-text h1 {
+    font-size: 2.25rem;
+  }
+
+  .hero-text p {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-text h1 {
+    font-size: 1.85rem;
+  }
+
+  .btn-link {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 </style>

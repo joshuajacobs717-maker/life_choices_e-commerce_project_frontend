@@ -71,6 +71,9 @@ const route = useRoute()
   width: 260px;
   min-height: 100vh;
   position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
 }
 
 .nav-link {
@@ -85,5 +88,38 @@ const route = useRoute()
 
 .nav-link.active {
   background-color: #0d6efd !important;
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    min-height: auto;
+    padding: 12px !important;
+  }
+
+  .admin-sidebar h4 {
+    margin-bottom: 10px !important;
+    font-size: 1rem;
+    text-align: left !important;
+  }
+
+  .admin-sidebar .nav {
+    flex-direction: row !important;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-sidebar .nav-link {
+    white-space: nowrap;
+    margin-bottom: 0;
+  }
+
+  .admin-sidebar hr,
+  .admin-sidebar .mt-auto {
+    display: none;
+  }
 }
 </style>

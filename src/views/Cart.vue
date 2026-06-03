@@ -418,7 +418,7 @@ onMounted(async () => {
 /* (same styles as your current Cart.vue) */
 .cart-page {
   min-height: 100vh;
-  padding: 40px;
+  padding: 40px clamp(14px, 4vw, 40px);
   box-sizing: border-box;
 }
 .top {
@@ -449,7 +449,7 @@ h1 {
 }
 .layout {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   gap: 22px;
   align-items: start;
 }
@@ -583,5 +583,67 @@ h1 {
   padding: 18px;
   border-radius: 12px;
   width: min(420px, 92vw);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary {
+    position: static;
+  }
+}
+
+@media (max-width: 680px) {
+  .top {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-top: 120px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .row {
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .thumb {
+    width: 92px;
+    height: 82px;
+  }
+
+  .lineTotal {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .qty {
+    gap: 6px;
+  }
+
+  .remove {
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 430px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .thumb {
+    width: 100%;
+    height: 160px;
+  }
+
+  .lineTotal {
+    grid-column: auto;
+  }
 }
 </style>

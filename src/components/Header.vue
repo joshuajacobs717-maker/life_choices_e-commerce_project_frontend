@@ -146,6 +146,7 @@ onUnmounted(() => {
   color: #040404;
   z-index: 1000;
   transition: top 0.3s ease;
+  gap: 14px;
 }
 
 .nav-container.hidden {
@@ -164,6 +165,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 1.3rem;
+  white-space: nowrap;
 }
 
 .logo-link:hover {
@@ -173,7 +176,10 @@ onUnmounted(() => {
 .menu-container {
   display: flex;
   gap: 10px;
-  margin-right: 150px;
+  margin-right: 0;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
 }
 
 .menu-container button {
@@ -203,7 +209,8 @@ onUnmounted(() => {
 .right-section {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .cart {
@@ -250,5 +257,77 @@ onUnmounted(() => {
 .signup-btn:hover {
   background-color: #E7E7E7;
   color: #040404;
+}
+
+@media (max-width: 960px) {
+  .nav-container {
+    height: auto;
+    min-height: 70px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .nav-container.hidden {
+    top: -150px;
+  }
+
+  .logo-container,
+  .right-section {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .menu-container {
+    order: 3;
+    width: 100%;
+    flex: 0 0 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .menu-container button {
+    width: auto;
+    min-width: max-content;
+    flex: 0 0 auto;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav-container {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .logo {
+    font-size: 1rem;
+    max-width: 180px;
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .right-section {
+    gap: 8px;
+  }
+
+  .login-options {
+    gap: 6px;
+  }
+
+  .login-btn,
+  .signup-btn,
+  .logout-btn {
+    padding: 7px 9px;
+    font-size: 0.85rem;
+  }
+
+  .cart-link {
+    padding: 8px;
+  }
 }
 </style>

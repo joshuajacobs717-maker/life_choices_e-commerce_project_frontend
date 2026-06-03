@@ -82,7 +82,7 @@ export default {
 
 <style>
 .category-section {
-  padding: 60px 80px;
+  padding: 60px clamp(16px, 5vw, 80px);
   background-color: #e7e7e7;
 }
 
@@ -108,13 +108,12 @@ export default {
 }
 
 .shop-by-cat {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 30px;
 }
 
 .items {
-  flex: 1;
   text-align: center;
   padding: 20px;
   border-radius: 12px;
@@ -132,5 +131,18 @@ export default {
 
 .items:hover {
   transform: translateY(-5px);
+}
+
+@media (max-width: 640px) {
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .category-section {
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
 }
 </style>

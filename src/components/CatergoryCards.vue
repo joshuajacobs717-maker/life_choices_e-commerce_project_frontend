@@ -185,14 +185,14 @@ async function buyNow(item) {
 <style scoped>
 .cards-wrapper {
   display: grid;
-  grid-template-columns: repeat(4, 250px);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 250px));
   justify-content: center;
   gap: 30px;
   width: 100%;
   position: relative;
 }
 .items {
-  width: 250px;
+  width: 100%;
   height: 360px;
   display: flex;
   flex-direction: column;
@@ -258,5 +258,29 @@ button {
   height: 240px;
   object-fit: cover;
   border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+  .cards-wrapper {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .items {
+    max-width: 420px;
+    margin: 0 auto;
+    height: auto;
+    min-height: 340px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .toast {
+    left: 14px;
+    right: 14px;
+    text-align: center;
+  }
 }
 </style>

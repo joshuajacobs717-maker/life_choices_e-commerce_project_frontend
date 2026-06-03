@@ -113,7 +113,7 @@ function openEdit(product) {
 
 <style scoped>
 .category-page {
-  padding: 20px 40px;
+  padding: 20px clamp(14px, 4vw, 40px);
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -164,6 +164,7 @@ function openEdit(product) {
   border-radius: 12px;
   border: 1px solid #ddd;
   width: 260px;
+  max-width: 100%;
 }
 .search-btn {
   border-radius: 12px;
@@ -224,5 +225,53 @@ function openEdit(product) {
 }
 .modal-center {
   width: min(900px, 95vw);
+}
+
+@media (max-width: 720px) {
+  .category-page {
+    margin-top: 140px;
+    gap: 22px;
+  }
+
+  .title h1 {
+    font-size: 1.7rem;
+  }
+
+  .actions,
+  .search,
+  .search-wrapper,
+  .admin-actions,
+  .add-btn,
+  .snake-link {
+    width: 100%;
+  }
+
+  .category-btn-div {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .category-btn-div button {
+    flex: 0 0 auto;
+  }
+
+  .search-wrapper input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-btn {
+    flex: 0 0 auto;
+  }
+
+  .snake-banner {
+    align-items: stretch;
+  }
+
+  .snake-link {
+    text-align: center;
+  }
 }
 </style>

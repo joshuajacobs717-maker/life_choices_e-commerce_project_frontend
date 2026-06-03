@@ -94,7 +94,7 @@ export default {
 <style>
 /* Center Everything */
 .faq-container {
-  min-width: 300px;
+  min-width: 0;
   text-align: center;
   padding: 20px 20px;
   background-color: #040404;
@@ -108,7 +108,7 @@ export default {
 
 /* Button */
 .drop-btn {
-  width: 60%;
+  width: min(760px, 100%);
   padding: 15px;
   border: 1px solid #f3f3f3;
   background-color: transparent;
@@ -139,7 +139,7 @@ export default {
 
 /* Dropdown Content */
 .drop-content {
-  width: 60%;
+  width: min(760px, 100%);
   margin: 0 auto 15px auto;
   padding: 15px;
   border-radius: 8px;
@@ -163,5 +163,17 @@ export default {
 .dropdown-leave-from {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .faq-container h3 {
+    font-size: 1.55rem;
+    margin-bottom: 24px;
+  }
+
+  .drop-btn {
+    text-align: left;
+    gap: 12px;
+  }
 }
 </style>

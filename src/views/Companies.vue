@@ -215,7 +215,7 @@ onMounted(async () => {
 <style scoped>
 .companies-page {
   min-height: 100vh;
-  padding: 40px;
+  padding: 40px clamp(14px, 4vw, 40px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -241,9 +241,9 @@ onMounted(async () => {
 }
 .companies-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 25px;
-  padding: 40px;
+  padding: 0;
 }
 .admin-btn {
   padding: 10px 14px;
@@ -262,9 +262,7 @@ onMounted(async () => {
 
 .cards-container {
   flex: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  display: block;
 }
 
 .state {
@@ -384,7 +382,25 @@ textarea:focus {
   .companies-page {
     padding: 24px 16px;
   }
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-top: 130px;
+  }
+  .admin-btn {
+    width: 100%;
+  }
   .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .header-left h1 {
+    font-size: 1.9rem;
+  }
+
+  .companies-grid {
     grid-template-columns: 1fr;
   }
 }
